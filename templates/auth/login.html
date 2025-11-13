@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Vivants{% endblock %}
+
+{% block content %}
+<div class="login-bg">
+    <div class="container">
+        <div class="login-card">
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">Vivants</h2>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Senha</label>
+                            <input type="password" name="senha" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-vivants w-100 mb-3">Entrar</button>
+                        <div class="text-center">
+                            <a href="{{ url_for('cadastro') }}" class="btn btn-vivants">Criar conta</a>
+                            <a href="{{ url_for('index') }}" class="btn btn- volta">Voltar ao site</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

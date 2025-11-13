@@ -1,0 +1,122 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Gerenciar Categorias - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0">Gerenciar Categorias</h1>
+        <button class="btn btn-vivants-admin" data-bs-toggle="modal" data-bs-target="#modalAdicionar">
+            <i class="fas fa-plus-circle"></i> Adicionar Categoria
+        </button>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="row">
+    {% for categoria in categorias %}
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ categoria.nome }}</h5>
+                <p class="card-text flex-grow-1">{{ categoria.descricao or 'Sem descrição' }}</p>
+                <div class="btn-group mt-auto">
+                    <button class="btn btn-sm btn-info"
+                            onclick="editarCategoria({{ categoria.id }}, '{{ categoria.nome }}', '{{ categoria.descricao or '' }}')"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalEditar">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                    <form method="POST" style="display:inline;">
+                        <input type="hidden" name="action" value="excluir">
+                        <input type="hidden" name="categoria_id" value="{{ categoria.id }}">
+                        <button class="btn btn-sm btn-danger" onclick="return confirm('Desativar esta categoria?')">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal Adicionar -->
+<div class="modal fade" id="modalAdicionar">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                <input type="hidden" name="action" value="adicionar">
+                <div class="modal-header">
+                    <h5 class="modal-title">Adicionar Categoria</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Categoria</label>
+                        <input type="text" name="nome" class="form-control" placeholder="Digite o nome da categoria" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea name="descricao" class="form-control" rows="3" placeholder="Digite uma descrição (opcional)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-vivants-admin">Adicionar Categoria</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditar">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="formEditar">
+                <input type="hidden" name="action" value="editar">
+                <input type="hidden" name="categoria_id" id="edit_categoria_id">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Categoria</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Categoria</label>
+                        <input type="text" name="nome" id="edit_nome" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea name="descricao" id="edit_descricao" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-vivants-admin">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editarCategoria(id, nome, descricao) {
+    document.getElementById('edit_categoria_id').value = id;
+    document.getElementById('edit_nome').value = nome;
+    document.getElementById('edit_descricao').value = descricao || '';
+}
+</script>
+{% endblock %}

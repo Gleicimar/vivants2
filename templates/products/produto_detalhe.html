@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}{{ produto.nome }} - Vivants{% endblock %}
+
+{% block content %}
+<!-- Navegação -->
+<div class="breadcrumb">
+    <a href="{{ url_for('produtos_lista') }}" class="breadcrumb-link">
+        <i class="fa-solid fa-arrow-left"></i> Voltar aos Produtos
+    </a>
+</div>
+
+<div class="product-detail-container">
+    <div class="product-detail-grid">
+        <!-- Imagem do Produto -->
+        <div class="product-image-section">
+            <div class="image-container">
+                {% if produto.imagem %}
+                <img src="{{ produto.imagem }}" alt="{{ produto.nome }}" class="product-image">
+                {% else %}
+                <i class="fa-solid fa-star product-image-placeholder"></i>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Informações do Produto -->
+        <div class="product-info-section">
+            <span class="product-badge">{{ produto.categoria_nome }}</span>
+
+            <h1 class="product-title">{{ produto.nome }}</h1>
+
+            <p class="product-description">{{ produto.descricao }}</p>
+
+            <!-- Preço -->
+            <div class="pricing-section">
+                {% if produto.preco_promocional %}
+                <div class="price-comparison">
+                    <span class="original-price">R$ {{ "%.2f"|format(produto.preco) }}</span>
+                    <span class="discount-price">R$ {{ "%.2f"|format(produto.preco_promocional) }}</span>
+                </div>
+                <span class="discount-badge">
+                    Economize R$ {{ "%.2f"|format(produto.preco - produto.preco_promocional) }}
+                </span>
+                {% else %}
+                <span class="normal-price">R$ {{ "%.2f"|format(produto.preco) }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Estoque -->
+            <div class="stock-info">
+                <p>
+                    <strong>Disponibilidade:</strong>
+                    {% if produto.estoque > 10 %}
+                    <span class="stock-available">✅ {{ produto.estoque }} unidades em estoque</span>
+                    {% elif produto.estoque > 0 %}
+                    <span class="stock-low">⚠️ Apenas {{ produto.estoque }} unidades restantes</span>
+                    {% else %}
+                    <span class="stock-out">❌ Produto esgotado</span>
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- Formulário de Compra -->
+            {% if session.user_id %}
+                {% if produto.estoque > 0 %}
+                <form method="POST" action="{{ url_for('adicionar_carrinho', produto_id=produto.id) }}">
+                    <div class="quantity-selector">
+                        <label class="quantity-label">Quantidade:</label>
+                        <div class="quantity-controls">
+                            <button type="button" onclick="decrementQuantity()" class="quantity-btn">-</button>
+                            <input type="number" name="quantidade" id="quantidade" value="1" min="1" max="{{ produto.estoque }}" class="quantity-input">
+                            <button type="button" onclick="incrementQuantity()" class="quantity-btn">+</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-add-cart">
+                        <i class="fa-solid fa-cart-plus"></i> Adicionar ao Carrinho
+                    </button>
+                </form>
+                {% else %}
+                <button disabled class="btn-disabled">
+                    <i class="fa-solid fa-xmark"></i> Produto Esgotado
+                </button>
+                {% endif %}
+            {% else %}
+            <div class="login-prompt-container">
+                <a href="{{ url_for('login') }}" class="btn-login">
+                    <i class="fa-solid fa-sign-in"></i> Faça login para comprar
+                </a>
+                <p class="login-suggestion">
+                    Ou <a href="{{ url_for('cadastro') }}" class="register-link">crie uma conta</a> para fazer pedidos
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Características -->
+            <div class="product-features">
+                <h3 class="features-title">Características</h3>
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <i class="fa-solid fa-truck"></i>
+                        <span>Entrega em todo Brasil</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-shield-alt"></i>
+                        <span>Compra 100% segura</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-exchange-alt"></i>
+                        <span>Troca garantida</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fa-solid fa-award"></i>
+                        <span>Produto original</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avaliações e Produtos Relacionados -->
+    <div class="product-detail-bottom">
+        <!-- Avaliações -->
+        <div class="reviews-section">
+            <h2 class="reviews-title">
+                <i class="fa-solid fa-star"></i>
+                Avaliações do Produto
+                {% if avaliacoes %}
+                <span class="reviews-count">{{ avaliacoes|length }} avaliação{{ 's' if avaliacoes|length > 1 else '' }}</span>
+                {% endif %}
+            </h2>
+
+            {% if avaliacoes %}
+                {% for avaliacao in avaliacoes %}
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="review-user">
+                            <h4>{{ avaliacao.usuario_nome }}</h4>
+                            <div class="review-stars">
+                                {% for i in range(5) %}
+                                    {% if i < avaliacao.nota %}
+                                    <i class="fa-solid fa-star"></i>
+                                    {% else %}
+                                    <i class="fa-regular fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <span class="review-date">{{ avaliacao.data_avaliacao }}</span>
+                    </div>
+                    {% if avaliacao.comentario %}
+                    <p class="review-comment">{{ avaliacao.comentario }}</p>
+                    {% else %}
+                    <p class="review-comment empty">Sem comentário</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="no-reviews">
+                <i class="fa-regular fa-comments"></i>
+                <h4>Nenhuma avaliação ainda</h4>
+                <p>Seja o primeiro a avaliar este produto!</p>
+            </div>
+            {% endif %}
+
+            <!-- Formulário de Avaliação -->
+            {% if session.user_id %}
+            <div class="review-form">
+                <div class="review-form-container">
+                    <h4 class="review-form-title">Deixe sua avaliação</h4>
+                    <form method="POST" action="{{ url_for('avaliar_produto', id=produto.id) }}">
+                        <div class="rating-section">
+                            <label class="rating-label">Sua nota</label>
+                            <div class="rating-stars">
+                                {% for i in range(5, 0, -1) %}
+                                <div class="rating-option">
+                                    <input type="radio" name="nota" id="nota{{ i }}" value="{{ i }}" required>
+                                    <label for="nota{{ i }}">
+                                        {% for j in range(i) %}
+                                        <i class="fa-solid fa-star"></i>
+                                        {% endfor %}
+                                        {% for j in range(5 - i) %}
+                                        <i class="fa-regular fa-star"></i>
+                                        {% endfor %}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="comment-section">
+                            <label class="comment-label">Comentário (opcional)</label>
+                            <textarea name="comentario" class="review-textarea" placeholder="Compartilhe sua experiência com este produto..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit-review">
+                            Enviar Avaliação
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="login-prompt">
+                <p>
+                    <i class="fa-solid fa-info-circle"></i>
+                    <a href="{{ url_for('login') }}">Faça login</a> para deixar uma avaliação deste produto.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Produtos Relacionados -->
+        <div class="related-products">
+            <h3 class="related-products-title">Produtos Relacionados</h3>
+            <div class="related-products-list">
+                {% for rel in produtos_relacionados %}
+                <a href="{{ url_for('produto_detalhe', id=rel.id) }}" class="related-product">
+                    <div class="related-product-image">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <div class="related-product-info">
+                        <h4>{{ rel.nome }}</h4>
+                        <span class="related-product-price">
+                            R$ {{ "%.2f"|format(rel.preco_promocional or rel.preco) }}
+                        </span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function incrementQuantity() {
+    const input = document.getElementById('quantidade');
+    const max = parseInt(input.getAttribute('max'));
+    if (parseInt(input.value) < max) {
+        input.value = parseInt(input.value) + 1;
+    }
+}
+
+function decrementQuantity() {
+    const input = document.getElementById('quantidade');
+    if (parseInt(input.value) > 1) {
+        input.value = parseInt(input.value) - 1;
+    }
+}
+
+// Estrelas de avaliação interativas
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.rating-stars input[type="radio"]');
+    stars.forEach(star => {
+        star.addEventListener('change', function() {
+            stars.forEach(s => {
+                const label = s.nextElementSibling;
+                if (s.checked) {
+                    label.style.background = 'rgba(235, 159, 0, 0.1)';
+                } else {
+                    label.style.background = 'transparent';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

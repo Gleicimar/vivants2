@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Produtos - Vivants{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="slider">
+    <div class="slides_container">
+        <div class="img_slider s1">
+            <div class="slide-content">
+                <h1>Nossos Produtos</h1>
+                <p>Descubra a linha completa de cuidados capilares Vivants</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="vivants_professional">
+    <div class="center">
+        <h1>Linha Profissional</h1>
+
+        <!-- Filtros -->
+        <div class="filtros-container" style="width: 100%; margin: 30px 0; padding: 0 20px;">
+            <div class="filtros-wrapper" style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                <!-- Busca -->
+                <form method="GET" action="{{ url_for('produtos_lista') }}" style="display: flex; gap: 10px;">
+                    <input type="text" name="busca" class="form-control" placeholder="Buscar produto..."
+                           value="{{ request.args.get('busca', '') }}"
+                           style="padding: 10px; border: 2px solid var(--primary-color); border-radius: 25px; min-width: 250px;">
+                    <button type="submit" class="btn-slider" style="background: var(--primary-color); color: #333; border: none;">
+                        <i class="fa-solid fa-search"></i>
+                    </button>
+                </form>
+
+                <!-- Categorias -->
+                <div class="categorias-filtro">
+                    <select name="categoria" onchange="window.location.href=this.value"
+                            style="padding: 10px 15px; border: 2px solid var(--primary-color); border-radius: 25px; background: white;">
+                        <option value="{{ url_for('produtos_lista') }}">Todas as Categorias</option>
+                        {% for cat in categorias %}
+                        <option value="{{ url_for('produtos_lista', categoria=cat.id) }}"
+                                {% if categoria_id == cat.id %}selected{% endif %}>
+                            {{ cat.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid de Produtos -->
+        <div class="products-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; width: 100%; padding: 0 20px;">
+            {% for produto in produtos %}
+            <div class="product-card" style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.1); transition: transform 0.3s ease;">
+                <div class="product-image" style="height: 250px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); display: flex; align-items: center; justify-content: center;">
+                    {% if produto.imagem %}
+                    <img src="{{ produto.imagem }}" alt="{{ produto.nome }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <i class="fa-solid fa-star" style="font-size: 4rem; color: var(--primary-color);"></i>
+                    {% endif %}
+                </div>
+
+                <div class="product-info" style="padding: 20px;">
+                    <span class="product-category" style="background: var(--gradiente-vivants); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 0.9rem; font-weight: bold;">
+                        {{ produto.categoria_nome }}
+                    </span>
+
+                    <h3 style="margin: 10px 0; color: #333; font-size: 1.3rem;">{{ produto.nome }}</h3>
+
+                    <p style="color: #666; margin-bottom: 15px; line-height: 1.4;">{{ produto.descricao[:100] }}...</p>
+
+                    <div class="product-pricing" style="margin-bottom: 20px;">
+                        {% if produto.preco_promocional %}
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.1rem; color: #999; text-decoration: line-through;">R$ {{ "%.2f"|format(produto.preco) }}</span>
+                            <span style="font-size: 1.5rem; font-weight: bold; background: var(--gradiente-vivants); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">R$ {{ "%.2f"|format(produto.preco_promocional) }}</span>
+                        </div>
+                        {% else %}
+                        <span style="font-size: 1.5rem; font-weight: bold; background: var(--gradiente-vivants); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">R$ {{ "%.2f"|format(produto.preco) }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="product-stock" style="margin-bottom: 15px;">
+                        <span style="font-size: 0.9rem; color: #666;">
+                            {% if produto.estoque > 10 %}
+                            ✅ Em estoque
+                            {% elif produto.estoque > 0 %}
+                            ⚠️ Últimas {{ produto.estoque }} unidades
+                            {% else %}
+                            ❌ Esgotado
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <a href="{{ url_for('produto_detalhe', id=produto.id) }}"
+                       class="btn-vivants"
+                       style="display: block; text-align: center; text-decoration: none; background: var(--gradiente-vivants); color: white; padding: 12px 20px; border-radius: 25px; font-weight: bold; transition: all 0.3s ease;">
+                        Ver Detalhes
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div style="grid-column: 1 / -1; text-align: center; padding: 50px;">
+                <i class="fa-solid fa-box-open" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 20px;"></i>
+                <h3 style="color: #333; margin-bottom: 10px;">Nenhum produto encontrado</h3>
+                <p style="color: #666;">Tente ajustar os filtros de busca.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.product-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.btn-vivants:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(235, 159, 0, 0.3);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .products-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        padding: 0 10px;
+    }
+
+    .filtros-wrapper {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .filtros-wrapper form {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .product-card {
+        margin: 0 10px;
+    }
+}
+</style>
+{% endblock %}

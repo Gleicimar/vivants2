@@ -1,0 +1,52 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Gerenciar Clientes - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0">Gerenciar Clientes</h1>
+    </div>
+</div>
+<!-- Botões de relatório -->
+<div class="btn-group mb-3">
+    <a href="{{ url_for('relatorio_produtos_excel') }}" class="btn btn-success btn-sm">
+        <i class="fas fa-file-excel"></i> Baixar Excel
+    </a>
+    <a href="{{ url_for('relatorio_produtos_pdf') }}" class="btn btn-danger btn-sm">
+        <i class="fas fa-file-pdf"></i> Baixar PDF
+    </a>
+    <a href="{{ url_for('salvar_relatorio_produtos_excel') }}" class="btn btn-warning btn-sm">
+        <i class="fas fa-save"></i> Salvar no Servidor
+    </a>
+    <a href="{{ url_for('lista_relatorios') }}" class="btn btn-info btn-sm">
+        <i class="fas fa-list"></i> Ver Relatórios Salvos
+    </a>
+</div>
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Telefone</th>
+                    <th>Data Cadastro</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                <tr>
+                    <td>{{ cliente.id }}</td>
+                    <td>{{ cliente.nome }}</td>
+                    <td>{{ cliente.email }}</td>
+                    <td>{{ cliente.telefone or 'Não informado' }}</td>
+                    <td>{{ cliente.data_cadastro }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

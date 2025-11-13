@@ -1,0 +1,128 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dashboard - Vivants Admin{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0">Dashboard</h1>
+        <div class="text-muted">
+            <i class="fas fa-calendar"></i> {{ now.strftime('%d/%m/%Y') }}
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-number">{{ stats.total_produtos }}</div>
+            <div class="stat-label">Total de Produtos</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stat-number">{{ stats.total_pedidos }}</div>
+            <div class="stat-label">Pedidos Realizados</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-info bg-opacity-10 text-info">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-number">{{ stats.total_clientes }}</div>
+            <div class="stat-label">Clientes Cadastrados</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-number">R$ {{ "%.2f"|format(stats.faturamento_total) }}</div>
+            <div class="stat-label">Faturamento Total</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Pedidos Recentes -->
+    <div class="col-md-6">
+        <div class="table-card">
+            <h5 class="mb-3"><i class="fas fa-clock"></i> Pedidos Recentes</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pedido in pedidos_recentes %}
+                        <tr>
+                            <td>#{{ pedido.id }}</td>
+                            <td>{{ pedido.usuario_nome }}</td>
+                            <td>R$ {{ "%.2f"|format(pedido.total) }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if pedido.status == 'pendente' %}bg-warning
+                                    {% elif pedido.status == 'entregue' %}bg-success
+                                    {% else %}bg-info{% endif %}">
+                                    {{ pedido.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Produtos com Baixo Estoque -->
+    <div class="col-md-6">
+        <div class="table-card">
+            <h5 class="mb-3"><i class="fas fa-exclamation-triangle"></i> Produtos com Baixo Estoque</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Estoque</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produto in produtos_baixo_estoque %}
+                        <tr>
+                            <td>{{ produto.nome }}</td>
+                            <td>
+                                <span class="badge bg-danger">{{ produto.estoque }}</span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin_produtos') }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

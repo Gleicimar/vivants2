@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="slider">
+    <div class="slides_container">
+        <div class="img_slider s1">
+            <div class="slide-content">
+                <h1>Vivants Cosméticos</h1>
+                <p>Beleza que Transforma</p>
+                <a href="{{ url_for('produtos_lista') }}" class="btn-slider">Explorar Produtos</a>
+            </div>
+        </div>
+        <div class="img_slider s2">
+            <div class="slide-content">
+                <h1>Qualidade Premium</h1>
+                <p>Ingredientes naturais selecionados</p>
+                <a href="{{ url_for('produtos_lista') }}" class="btn-slider">Ver Catálogo</a>
+            </div>
+        </div>
+        <div class="img_slider s3">
+            <div class="slide-content">
+                <h1>Cosméticos de Luxo</h1>
+                <p>Produtos exclusivos para você</p>
+                <a href="{{ url_for('produtos_lista') }}" class="btn-slider">Comprar Agora</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="vivants" id="sobre">
+  <h1>Vivants</h1>
+  <p>A Vivants é uma empresa que tem forte compromisso com seus clientes, por isso asseguramos que nossos produtos são inteiramente feitos no Brasil, utilizando ingredientes naturais. Saiba que pela nossa política de preservação a saúde e o meio ambiente, evitamos o uso de Parabenos e SLES. Não só a curto prazo, mas assim como os efeitos ao longo dos anos.</p>
+</section>
+
+<section class="vivants_professional">
+  <div class="center">
+      <h1>Vivants Professional Hair</h1>
+      <div class="image_container">
+        <figure>
+            <a href="{{ url_for('produtos_lista') }}">
+                <img src="{{ url_for('static', filename='images/pack_tratamentos.jpg') }}" alt="Tratamentos">
+                <figcaption>Tratamentos</figcaption>
+            </a>
+        </figure>
+      </div>
+      <div class="image_container">
+        <figure>
+            <a href="{{ url_for('produtos_lista') }}">
+                <img src="{{ url_for('static', filename='images/pack_hidratações.jpg') }}" alt="Hidratações">
+                <figcaption>Hidratação</figcaption>
+            </a>
+        </figure>
+      </div>
+      <div class="image_container">
+        <figure>
+            <a href="{{ url_for('produtos_lista') }}">
+                <img src="{{ url_for('static', filename='images/pack_pos_progressiva.jpg') }}" alt="Pós Progressiva">
+                <figcaption>Pós Progressiva</figcaption>
+            </a>
+        </figure>
+      </div>
+      <div class="image_container">
+        <figure>
+            <a href="{{ url_for('produtos_lista') }}">
+                <img src="{{ url_for('static', filename='images/pack_manutenção.jpg') }}" alt="Manutenção">
+                <figcaption>Manutenção</figcaption>
+            </a>
+        </figure>
+      </div>
+      <div class="image_container">
+        <figure>
+            <a href="{{ url_for('produtos_lista') }}">
+                <img src="{{ url_for('static', filename='images/pack_finalizadores.jpg') }}" alt="Finalizadores">
+                <figcaption>Finalizadores</figcaption>
+            </a>
+        </figure>
+      </div>
+      <div class="image_container">
+        <figure>
+            <a href="{{ url_for('produtos_lista') }}">
+                <img src="{{ url_for('static', filename='images/TESTE-44-300x254.png') }}" alt="Produtos Especiais">
+                <figcaption>Produtos Especiais</figcaption>
+            </a>
+        </figure>
+      </div>
+  </div>
+</section>
+
+<section class="materia_prima">
+  <div class="center">
+        <h1>Matéria Prima de Qualidade.</h1>
+
+        <div class="slider_mp">
+          <div class="img_mp mp1 active">
+            <div class="mp-content">
+                <h3>Ingredientes Selecionados</h3>
+                <p>Qualidade garantida em cada produto</p>
+            </div>
+          </div>
+          <div class="img_mp mp2">
+            <div class="mp-content">
+                <h3>Sem Parabenos</h3>
+                <p>Compromisso com sua saúde</p>
+            </div>
+          </div>
+          <div class="img_mp mp3">
+            <div class="mp-content">
+                <h3>Natural</h3>
+                <p>Ingredientes da natureza</p>
+            </div>
+          </div>
+          <div class="img_mp mp4">
+            <div class="mp-content">
+                <h3>Testado</h3>
+                <p>Qualidade comprovada</p>
+            </div>
+          </div>
+          <div class="img_mp mp5">
+            <div class="mp-content">
+                <h3>Sustentável</h3>
+                <p>Respeito ao meio ambiente</p>
+            </div>
+          </div>
+          <div class="img_mp mp6">
+            <div class="mp-content">
+                <h3>Eficiência</h3>
+                <p>Resultados comprovados</p>
+            </div>
+          </div>
+          <div class="img_mp mp7">
+            <div class="mp-content">
+                <h3>Inovação</h3>
+                <p>Tecnologia e natureza</p>
+            </div>
+          </div>
+        </div>
+
+        <p>Nada se compara com os benefícios trazidos por ingredientes rigorosamente selecionados.
+        Temos absoluta certeza que este é o princípio fundamental por trás de todos os nossos produtos .
+      </p>
+  </div>
+</section>
+{% endblock %}

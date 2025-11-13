@@ -1,0 +1,75 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Detalhes do Pedido #{{ pedido.id }} - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Pedido #{{ pedido.id }}</h2>
+        <a href="{{ url_for('admin_pedidos') }}" class="btn btn-secondary">← Voltar</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header"><h5>Informações do Cliente</h5></div>
+                <div class="card-body">
+                    <p><strong>Nome:</strong> {{ pedido.cliente_nome }}</p>
+                    <p><strong>Email:</strong> {{ pedido.cliente_email }}</p>
+                    <p><strong>Telefone:</strong> {{ pedido.cliente_telefone or 'Não informado' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header"><h5>Informações do Pedido</h5></div>
+                <div class="card-body">
+                    <p><strong>Data:</strong> {{ pedido.data_pedido }}</p>
+                    <p><strong>Status:</strong> <span class="badge bg-info">{{ pedido.status|upper }}</span></p>
+                    <p><strong>Total:</strong> <span class="text-success h5">R$ {{ "%.2f"|format(pedido.total) }}</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header"><h5>Endereço de Entrega</h5></div>
+        <div class="card-body">
+            <p>{{ pedido.endereco_entrega }}</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h5>Itens do Pedido</h5></div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Preço Unit.</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in itens %}
+                    <tr>
+                        <td>{{ item.produto_nome }}</td>
+                        <td>{{ item.quantidade }}</td>
+                        <td>R$ {{ "%.2f"|format(item.preco_unitario) }}</td>
+                        <td>R$ {{ "%.2f"|format(item.preco_unitario * item.quantidade) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="3" class="text-end">Total:</th>
+                        <th>R$ {{ "%.2f"|format(pedido.total) }}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

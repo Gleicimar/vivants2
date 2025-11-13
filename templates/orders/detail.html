@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes do Pedido #{{ pedido.id }} - Vivants{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Detalhes do Pedido</h1>
+        <a href="{{ url_for('meus_pedidos') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar aos Pedidos
+        </a>
+    </div>
+
+    <!-- Resumo do Pedido -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Resumo do Pedido #{{ pedido.id }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Data do Pedido:</strong> {{ pedido.data_pedido }}</p>
+                    <p><strong>Status:</strong>
+                        <span class="badge
+                            {% if pedido.status == 'pendente' %}bg-warning
+                            {% elif pedido.status == 'processando' %}bg-info
+                            {% elif pedido.status == 'enviado' %}bg-primary
+                            {% elif pedido.status == 'entregue' %}bg-success
+                            {% else %}bg-danger{% endif %}">
+                            {{ pedido.status|upper }}
+                        </span>
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Total do Pedido:</strong> <span class="h5 text-success">R$ {{ "%.2f"|format(pedido.total) }}</span></p>
+                    <p><strong>Endereço de Entrega:</strong> {{ pedido.endereco_entrega }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Itens do Pedido -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Itens do Pedido</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Produto</th>
+                            <th class="text-center">Quantidade</th>
+                            <th class="text-end">Preço Unitário</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in itens %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-box text-primary me-3 fs-4"></i>
+                                    <div>
+                                        <h6 class="mb-1">{{ item.nome }}</h6>
+                                        <small class="text-muted">Código: {{ item.produto_id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary fs-6">{{ item.quantidade }}</span>
+                            </td>
+                            <td class="text-end">
+                                R$ {{ "%.2f"|format(item.preco_unitario) }}
+                            </td>
+                            <td class="text-end">
+                                <strong>R$ {{ "%.2f"|format(item.preco_unitario * item.quantidade) }}</strong>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                            <td class="text-end">R$ {{ "%.2f"|format(pedido.total) }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Frete:</strong></td>
+                            <td class="text-end text-success">Grátis</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                            <td class="text-end"><strong class="h5 text-success">R$ {{ "%.2f"|format(pedido.total) }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline do Pedido -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Acompanhamento do Pedido</h5>
+        </div>
+        <div class="card-body">
+            <div class="timeline">
+                {% set steps = [
+                    {'status': 'pendente', 'icon': 'bi-cart', 'label': 'Pedido Recebido', 'description': 'Seu pedido foi recebido e está sendo processado.'},
+                    {'status': 'processando', 'icon': 'bi-gear', 'label': 'Em Processamento', 'description': 'Estamos preparando seu pedido.'},
+                    {'status': 'enviado', 'icon': 'bi-truck', 'label': 'Enviado', 'description': 'Seu pedido saiu para entrega.'},
+                    {'status': 'entregue', 'icon': 'bi-check-circle', 'label': 'Entregue', 'description': 'Pedido entregue com sucesso!'}
+                ] %}
+
+                {% for step in steps %}
+                <div class="timeline-item {% if step.status == pedido.status %}current{% endif %}">
+                    <div class="timeline-marker">
+                        <i class="bi {{ step.icon }}"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <h6 class="mb-1">{{ step.label }}</h6>
+                        <p class="text-muted mb-0">{{ step.description }}</p>
+                        {% if step.status == pedido.status %}
+                            <small class="text-primary"><i class="bi bi-info-circle"></i> Status atual</small>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h6><i class="bi bi-headset text-primary me-2"></i>Precisa de Ajuda?</h6>
+                    <p class="small text-muted mb-2">Em caso de dúvidas sobre seu pedido, entre em contato conosco:</p>
+                    <ul class="list-unstyled small">
+                        <li><i class="bi bi-whatsapp text-success me-2"></i>(11) 99999-9999</li>
+                        <li><i class="bi bi-envelope text-primary me-2"></i>suporte@vivants.com</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h6><i class="bi bi-arrow-repeat text-primary me-2"></i>Fazer Novo Pedido</h6>
+                    <p class="small text-muted mb-3">Gostou dos produtos? Faça um novo pedido!</p>
+                    <a href="{{ url_for('produtos_lista') }}" class="btn btn-vivants btn-sm">
+                        <i class="bi bi-bag-plus"></i> Continuar Comprando
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    padding: 15px 0;
+    border-left: 2px solid #e9ecef;
+}
+
+.timeline-item.current {
+    border-left-color: var(--primary);
+}
+
+.timeline-item:last-child {
+    border-left: 2px solid transparent;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -41px;
+    top: 15px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid white;
+}
+
+.timeline-item.current .timeline-marker {
+    background: var(--primary);
+    color: white;
+}
+
+.timeline-content {
+    margin-left: 20px;
+}
+
+.timeline-marker i {
+    font-size: 1.1rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #6c757d;
+}
+</style>
+{% endblock %}

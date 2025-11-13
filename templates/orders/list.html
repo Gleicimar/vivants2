@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Meus Pedidos - Vivants{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">Meus Pedidos</h2>
+
+    {% if pedidos %}
+        {% for pedido in pedidos %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>Pedido #{{ pedido.id }}</h5>
+                            <p class="mb-1"><strong>Data:</strong> {{ pedido.data_pedido }}</p>
+                            <p class="mb-1"><strong>Total:</strong> R$ {{ "%.2f"|format(pedido.total) }}</p>
+                            <p class="mb-1"><strong>Status:</strong>
+                                <span class="badge bg-{{ 'warning' if pedido.status == 'pendente' else 'success' if pedido.status == 'entregue' else 'info' }}">
+                                    {{ pedido.status|upper }}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{{ url_for('pedido_detalhes', id=pedido.id) }}" class="btn btn-outline-primary">
+                                Ver Detalhes
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-bag-x display-1 text-muted"></i>
+            <h4 class="mt-3">Você ainda não fez nenhum pedido</h4>
+            <a href="{{ url_for('produtos_lista') }}" class="btn btn-vivants mt-3">
+                Explorar Produtos
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

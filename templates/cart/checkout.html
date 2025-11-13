@@ -1,0 +1,26 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Finalizar Pedido - Vivants{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">Finalizar Pedido</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Endereço de Entrega</label>
+                            <textarea name="endereco" class="form-control" rows="4" required
+                                      placeholder="Rua, número, bairro, cidade, estado, CEP"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-vivants w-100">Confirmar Pedido</button>
+                        <a href="{{ url_for('carrinho') }}" class="btn btn-outline-secondary w-100 mt-2">Voltar</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

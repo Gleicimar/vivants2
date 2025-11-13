@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <title>{% block title %}Vivants Cosméticos{% endblock %}</title>
+</head>
+<body>
+  <div class="trad">
+    <select name="" id="">
+      <option value="pt-br">Português</option>
+      <option value="en">English</option>
+    </select>
+    <span>Idioma | Language</span>
+  </div>
+
+  <header>
+    <div class="center">
+      <a class="logo" href="{{ url_for('index') }}"></a>
+      <ul class="menu">
+        <li><a href="{{ url_for('index') }}">Home</a></li>
+        <li><a href="#sobre">A Vivants</a></li>
+        <li class="submenu_parent">
+          <a href="{{ url_for('produtos_lista') }}">Produtos <i class="fa-solid fa-caret-down"></i></a>
+          <h3 class="mobile"><i class="fa-solid fa-caret-down"></i>Menu</h3>
+          <ul class="submenu">
+            <li><a href="{{ url_for('produtos_lista') }}">Tratamentos</a></li>
+            <li><a href="{{ url_for('produtos_lista') }}">Hidratação</a></li>
+            <li><a href="{{ url_for('produtos_lista') }}">Pós Progressiva</a></li>
+            <li><a href="{{ url_for('produtos_lista') }}">Manutenção</a></li>
+            <li><a href="{{ url_for('produtos_lista') }}">Finalizadores</a></li>
+          </ul>
+        </li>
+        <li><a href="#passo-a-passo">Passo a Passo</a></li>
+        <li><a href="#distribuidor">Distribuidor</a></li>
+        <li><a href="#contato">Contato</a></li>
+        <li><a href="#e-books">E-books</a></li>
+
+        <!-- Menu do Usuário -->
+        {% if session.user_id %}
+          <li class="submenu_parent">
+            <a href="#"><i class="fa-solid fa-user"></i> Minha Conta <i class="fa-solid fa-caret-down"></i></a>
+            <ul class="submenu">
+              <li><a href="{{ url_for('meus_pedidos') }}">Meus Pedidos</a></li>
+              <li><a href="{{ url_for('carrinho') }}">Carrinho</a></li>
+              {% if session.user_type == 'admin' %}
+              <li><a href="{{ url_for('admin_dashboard') }}">Painel Admin</a></li>
+              {% endif %}
+              <li><a href="{{ url_for('logout') }}">Sair</a></li>
+            </ul>
+          </li>
+        {% else %}
+          <li><a href="{{ url_for('login') }}">Entrar</a></li>
+          <li><a href="{{ url_for('cadastro') }}">Cadastrar</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </header>
+
+  <!-- Mensagens Flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Conteúdo Principal -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer id="contato">
+    <div class="center">
+      <div class="foot_wrapper">
+        <div class="footer foot_1">
+          <h2>Mapa do site</h2>
+          <ul class="menu men_foot">
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            <li><a href="#sobre">A Vivants</a></li>
+            <li><a href="{{ url_for('produtos_lista') }}">Produtos</a></li>
+            <li><a href="#passo-a-passo">Passo a passo</a></li>
+            <li><a href="#distribuidor">Distribuidor</a></li>
+            <li><a href="#contato">Contato</a></li>
+          </ul>
+        </div>
+
+        <div class="footer foot_2">
+          <h2>Produtos por categoria</h2>
+          <ul class="menu men_foot">
+            <li><a href="{{ url_for('produtos_lista') }}">Tratamentos</a></li>
+            <li><a href="{{ url_for('produtos_lista') }}">Hidratação</a></li>
+            <li><a href="{{ url_for('produtos_lista') }}">Pós Progressiva</a></li>
+            <li><a href="{{ url_for('produtos_lista') }}">Manutenção</a></li>
+            <li><a href="{{ url_for('produtos_lista') }}">Finalizadores</a></li>
+          </ul>
+        </div>
+
+        <div class="footer foot_3">
+          <h2>Endereço & contatos</h2>
+          <h3>Vivants Professional Hair</h3>
+          <p>
+            <i class="fa-solid fa-location-dot"></i> R. Prosperina Souza Lima, 270<br>
+            Bernardo Monteiro - Contagem/MG <br>
+            <i class="fa-brands fa-whatsapp"></i> +55 31 98920-0739 <br>
+            <i class="fa-solid fa-phone"></i> +55 31 3017-2998 <br>
+            <i class="fa-solid fa-envelope"></i> contato@vivantshair.com <br>
+            <i class="fa-solid fa-globe"></i> vivantshair.com
+          </p>
+        </div>
+
+        <div class="footer foot_4">
+          <h2>Newsletter</h2>
+          <form method="post" action="#newsletter">
+            <input type="email" placeholder="Digite seu email" required>
+            <input type="submit" value="Assinar">
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="selos">
+      <div class="center">
+        <figure>
+          <img class="img_1" src="{{ url_for('static', filename='images/selos_1.png') }}" alt="Selo 1">
+        </figure>
+        <figure>
+          <img class="img_2" src="{{ url_for('static', filename='images/selos_2.png') }}" alt="Selo 2">
+        </figure>
+        <figure>
+          <img class="img_3" src="{{ url_for('static', filename='images/selos_3.png') }}" alt="Selo 3">
+        </figure>
+        <figure>
+          <img class="img_4" src="{{ url_for('static', filename='images/selos_4.png') }}" alt="Selo 4">
+        </figure>
+        <figure>
+          <img class="img_5" src="{{ url_for('static', filename='images/selos_5.png') }}" alt="Selo 5">
+        </figure>
+      </div>
+
+      <div class="sociais">
+        <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="#"><i class="fa-brands fa-pinterest-p"></i></a>
+        <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+        <a href="#"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#"><i class="fa-brands fa-youtube"></i></a>
+      </div>
+
+      <div class="tradutor">
+        <div class="tradutor_wrapper">
+          <a href="#">
+            <img src="{{ url_for('static', filename='images/pt-br.png') }}" alt="Português">
+            <span>Português</span>
+          </a>
+          <a href="#">
+            <img src="{{ url_for('static', filename='images/en.png') }}" alt="English">
+            <span>English</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

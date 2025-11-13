@@ -1,0 +1,492 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Gerenciar Produtos - Vivants Admin{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0">Gerenciar Produtos</h1>
+        <button class="btn btn-vivants-admin" data-bs-toggle="modal" data-bs-target="#modalAdicionar">
+            <i class="fas fa-plus-circle"></i> Adicionar Produto
+        </button>
+    </div>
+</div>
+
+<!-- Botões de relatório -->
+<div class="btn-group mb-3">
+    <a href="{{ url_for('relatorio_produtos_excel') }}" class="btn btn-success btn-sm">
+        <i class="fas fa-file-excel"></i> Baixar Excel
+    </a>
+    <a href="{{ url_for('relatorio_produtos_pdf') }}" class="btn btn-danger btn-sm">
+        <i class="fas fa-file-pdf"></i> Baixar PDF
+    </a>
+    <a href="{{ url_for('salvar_relatorio_produtos_excel') }}" class="btn btn-warning btn-sm">
+        <i class="fas fa-save"></i> Salvar no Servidor
+    </a>
+    <a href="{{ url_for('lista_relatorios') }}" class="btn btn-info btn-sm">
+        <i class="fas fa-list"></i> Ver Relatórios Salvos
+    </a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Imagem</th>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Categoria</th>
+                    <th>Preço</th>
+                    <th>Estoque</th>
+                    <th>Destaque</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for produto in produtos %}
+                <tr>
+                    <td>
+                        {% if produto.imagem %}
+                        <img src="{{ produto.imagem }}" alt="{{ produto.nome }}"
+                             style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                        {% else %}
+                        <div style="width: 50px; height: 50px; background: #f8f9fa; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-image text-muted"></i>
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>{{ produto.id }}</td>
+                    <td>{{ produto.nome }}</td>
+                    <td>{{ produto.categoria_nome }}</td>
+                    <td>
+                        {% if produto.preco_promocional %}
+                        <div>
+                            <small class="text-muted text-decoration-line-through">R$ {{ "%.2f"|format(produto.preco) }}</small>
+                            <div class="text-success fw-bold">R$ {{ "%.2f"|format(produto.preco_promocional) }}</div>
+                        </div>
+                        {% else %}
+                        R$ {{ "%.2f"|format(produto.preco) }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ 'danger' if produto.estoque < 10 else 'success' }}">
+                            {{ produto.estoque }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if produto.destaque %}
+                            <i class="fas fa-star text-warning" title="Produto em destaque"></i>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if produto.ativo %}
+                            <span class="badge bg-success">Ativo</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inativo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-info"
+                                    onclick="editarProduto(
+                                        {{ produto.id }},
+                                        '{{ produto.nome }}',
+                                        '{{ produto.descricao or '' }}',
+                                        {{ produto.preco }},
+                                        {{ produto.preco_promocional or 'null' }},
+                                        {{ produto.categoria_id }},
+                                        {{ produto.estoque }},
+                                        {{ produto.destaque }},
+                                        {{ produto.ativo }},
+                                        '{{ produto.imagem or '' }}'
+                                    )"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalEditar"
+                                    title="Editar produto">
+                                <i class="fas fa-edit"></i>
+                            </button>
+
+                            <!-- Botão para alterar imagem -->
+                            <button class="btn btn-warning"
+                                    onclick="alterarImagem({{ produto.id }}, '{{ produto.nome }}', '{{ produto.imagem or '' }}')"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalImagem"
+                                    title="Alterar imagem">
+                                <i class="fas fa-camera"></i>
+                            </button>
+
+                            <!-- Formulário de exclusão/desativação -->
+                            <form method="POST" style="display:inline;">
+                                <input type="hidden" name="action" value="{{ 'ativar' if not produto.ativo else 'desativar' }}">
+                                <input type="hidden" name="produto_id" value="{{ produto.id }}">
+                                <button type="submit" class="btn btn-{{ 'success' if not produto.ativo else 'secondary' }}"
+                                        title="{{ 'Ativar' if not produto.ativo else 'Desativar' }} produto">
+                                    <i class="fas fa-{{ 'check' if not produto.ativo else 'ban' }}"></i>
+                                </button>
+                            </form>
+
+                            <!-- Exclusão permanente (apenas para admin) -->
+                            {% if session.user_type == 'superadmin' %}
+                            <form method="POST" style="display:inline;">
+                                <input type="hidden" name="action" value="excluir_permanentemente">
+                                <input type="hidden" name="produto_id" value="{{ produto.id }}">
+                                <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('Tem certeza que deseja EXCLUIR PERMANENTEMENTE este produto? Esta ação não pode ser desfeita!')"
+                                        title="Excluir permanentemente">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Adicionar Produto -->
+<div class="modal fade" id="modalAdicionar">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="adicionar">
+                <div class="modal-header">
+                    <h5 class="modal-title">Adicionar Produto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nome do Produto *</label>
+                            <input type="text" name="nome" class="form-control" required maxlength="100">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Categoria *</label>
+                            <select name="categoria_id" class="form-select" required>
+                                <option value="">Selecione uma categoria...</option>
+                                {% for cat in categorias %}
+                                    <option value="{{ cat.id }}">{{ cat.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea name="descricao" class="form-control" rows="3" maxlength="500"
+                                  placeholder="Descreva o produto..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Preço Normal *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" step="0.01" min="0.01" name="preco" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Preço Promocional</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" step="0.01" min="0" name="preco_promocional" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Estoque *</label>
+                            <input type="number" name="estoque" class="form-control" value="0" min="0" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Imagem do Produto</label>
+                        <input type="file" name="imagem" class="form-control" accept="image/*"
+                               onchange="previewImage(this, 'previewAdicionar')">
+                        <div class="mt-2">
+                            <img id="previewAdicionar" src="" style="max-width: 200px; max-height: 200px; display: none;"
+                                 class="img-thumbnail">
+                        </div>
+                        <small class="text-muted">Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" name="destaque" class="form-check-input" id="destaque">
+                                <label class="form-check-label" for="destaque">Produto em Destaque</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" name="ativo" class="form-check-input" id="ativo" checked>
+                                <label class="form-check-label" for="ativo">Produto Ativo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-vivants-admin">
+                        <i class="fas fa-plus-circle"></i> Adicionar Produto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Produto -->
+<div class="modal fade" id="modalEditar">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" id="formEditar">
+                <input type="hidden" name="action" value="editar">
+                <input type="hidden" name="produto_id" id="edit_produto_id">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Produto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nome do Produto *</label>
+                            <input type="text" name="nome" id="edit_nome" class="form-control" required maxlength="100">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Categoria *</label>
+                            <select name="categoria_id" id="edit_categoria_id" class="form-select" required>
+                                {% for cat in categorias %}
+                                    <option value="{{ cat.id }}">{{ cat.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea name="descricao" id="edit_descricao" class="form-control" rows="3" maxlength="500"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Preço Normal *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" step="0.01" min="0.01" name="preco" id="edit_preco" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Preço Promocional</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" step="0.01" min="0" name="preco_promocional" id="edit_preco_promocional" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Estoque *</label>
+                            <input type="number" name="estoque" id="edit_estoque" class="form-control" min="0" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" name="destaque" id="edit_destaque" class="form-check-input">
+                                <label class="form-check-label" for="edit_destaque">Produto em Destaque</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" name="ativo" id="edit_ativo" class="form-check-input">
+                                <label class="form-check-label" for="edit_ativo">Produto Ativo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-vivants-admin">
+                        <i class="fas fa-save"></i> Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Alterar Imagem -->
+<div class="modal fade" id="modalImagem">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" enctype="multipart/form-data" id="formImagem">
+                <input type="hidden" name="action" value="alterar_imagem">
+                <input type="hidden" name="produto_id" id="imagem_produto_id">
+                <div class="modal-header">
+                    <h5 class="modal-title">Alterar Imagem do Produto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <h6 id="imagem_produto_nome" class="text-muted"></h6>
+                    </div>
+
+                    <div class="text-center mb-3">
+                        <img id="imagem_atual" src="" style="max-width: 200px; max-height: 200px;"
+                             class="img-thumbnail mb-2">
+                        <div id="sem_imagem" style="display: none;">
+                            <div style="width: 200px; height: 200px; background: #f8f9fa; border-radius: 5px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                <i class="fas fa-image fa-3x text-muted"></i>
+                            </div>
+                            <small class="text-muted">Nenhuma imagem definida</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Nova Imagem</label>
+                        <input type="file" name="imagem" class="form-control" accept="image/*" required
+                               onchange="previewImage(this, 'previewNovaImagem')">
+                        <div class="mt-2">
+                            <img id="previewNovaImagem" src="" style="max-width: 200px; max-height: 200px; display: none;"
+                                 class="img-thumbnail">
+                        </div>
+                        <small class="text-muted">Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB</small>
+                    </div>
+
+                    <div class="form-check">
+                        <input type="checkbox" name="remover_imagem" class="form-check-input" id="remover_imagem">
+                        <label class="form-check-label" for="remover_imagem">Remover imagem atual</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-vivants-admin">
+                        <i class="fas fa-save"></i> Salvar Imagem
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editarProduto(id, nome, descricao, preco, precoPromocional, categoriaId, estoque, destaque, ativo, imagem) {
+    document.getElementById('edit_produto_id').value = id;
+    document.getElementById('edit_nome').value = nome;
+    document.getElementById('edit_descricao').value = descricao || '';
+    document.getElementById('edit_preco').value = preco;
+    document.getElementById('edit_preco_promocional').value = precoPromocional !== null && precoPromocional !== 'null' ? precoPromocional : '';
+    document.getElementById('edit_categoria_id').value = categoriaId;
+    document.getElementById('edit_estoque').value = estoque;
+    document.getElementById('edit_destaque').checked = destaque === 1 || destaque === true;
+    document.getElementById('edit_ativo').checked = ativo === 1 || ativo === true;
+}
+
+function alterarImagem(produtoId, produtoNome, imagemUrl) {
+    document.getElementById('imagem_produto_id').value = produtoId;
+    document.getElementById('imagem_produto_nome').textContent = produtoNome;
+
+    const imagemAtual = document.getElementById('imagem_atual');
+    const semImagem = document.getElementById('sem_imagem');
+
+    if (imagemUrl) {
+        imagemAtual.src = imagemUrl;
+        imagemAtual.style.display = 'block';
+        semImagem.style.display = 'none';
+    } else {
+        imagemAtual.style.display = 'none';
+        semImagem.style.display = 'block';
+    }
+
+    // Reset do formulário
+    document.getElementById('formImagem').reset();
+    document.getElementById('previewNovaImagem').style.display = 'none';
+}
+
+function previewImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    const file = input.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        }
+
+        reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+// Validação de preços
+document.addEventListener('DOMContentLoaded', function() {
+    // Validação do preço promocional
+    const precoPromocionalInputs = document.querySelectorAll('input[name="preco_promocional"]');
+    precoPromocionalInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const precoNormal = this.form.querySelector('input[name="preco"]');
+            if (precoNormal && this.value && parseFloat(this.value) >= parseFloat(precoNormal.value)) {
+                alert('O preço promocional deve ser menor que o preço normal!');
+                this.value = '';
+                this.focus();
+            }
+        });
+    });
+
+    // Preview de imagem no modal de adicionar
+    const fileInputAdicionar = document.querySelector('#modalAdicionar input[type="file"]');
+    if (fileInputAdicionar) {
+        fileInputAdicionar.addEventListener('change', function() {
+            previewImage(this, 'previewAdicionar');
+        });
+    }
+});
+</script>
+
+<style>
+.img-thumbnail {
+    border: 2px dashed #dee2e6;
+    transition: border-color 0.3s ease;
+}
+
+.img-thumbnail:hover {
+    border-color: var(--primary-color);
+}
+
+.form-check.form-switch .form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-group .btn {
+    margin-right: 2px;
+}
+
+.table img {
+    transition: transform 0.3s ease;
+}
+
+.table img:hover {
+    transform: scale(1.1);
+}
+</style>
+{% endblock %}

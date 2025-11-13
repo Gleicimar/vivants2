@@ -1,0 +1,84 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Gerenciar Pedidos - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0">Gerenciar Pedidos</h1>
+    </div>
+</div>
+<!-- Botões de relatório -->
+<div class="btn-group mb-3">
+    <a href="{{ url_for('relatorio_produtos_excel') }}" class="btn btn-success btn-sm">
+        <i class="fas fa-file-excel"></i> Baixar Excel
+    </a>
+    <a href="{{ url_for('relatorio_produtos_pdf') }}" class="btn btn-danger btn-sm">
+        <i class="fas fa-file-pdf"></i> Baixar PDF
+    </a>
+    <a href="{{ url_for('salvar_relatorio_produtos_excel') }}" class="btn btn-warning btn-sm">
+        <i class="fas fa-save"></i> Salvar no Servidor
+    </a>
+    <a href="{{ url_for('lista_relatorios') }}" class="btn btn-info btn-sm">
+        <i class="fas fa-list"></i> Ver Relatórios Salvos
+    </a>
+</div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Data</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pedido in pedidos %}
+                <tr>
+                    <td>#{{ pedido.id }}</td>
+                    <td>
+                        <strong>{{ pedido.cliente_nome }}</strong><br>
+                        <small class="text-muted">{{ pedido.cliente_email }}</small>
+                    </td>
+                    <td>{{ pedido.data_pedido }}</td>
+                    <td>R$ {{ "%.2f"|format(pedido.total) }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin_atualizar_status_pedido') }}" class="d-inline">
+                            <input type="hidden" name="pedido_id" value="{{ pedido.id }}">
+                            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="pendente" {% if pedido.status == 'pendente' %}selected{% endif %}>Pendente</option>
+                                <option value="processando" {% if pedido.status == 'processando' %}selected{% endif %}>Processando</option>
+                                <option value="enviado" {% if pedido.status == 'enviado' %}selected{% endif %}>Enviado</option>
+                                <option value="entregue" {% if pedido.status == 'entregue' %}selected{% endif %}>Entregue</option>
+                                <option value="cancelado" {% if pedido.status == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                            </select>
+                        </form>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin_pedido_detalhes', id=pedido.id) }}" class="btn btn-sm btn-info">
+                            <i class="fas fa-eye"></i> Ver
+                        </a>
+
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
