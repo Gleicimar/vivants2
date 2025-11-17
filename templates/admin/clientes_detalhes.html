@@ -1,0 +1,221 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Detalhes do Cliente - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0">Detalhes do Cliente</h1>
+        <a href="{{ url_for('admin_clientes') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar para Clientes
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Informações do Cliente -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user me-2"></i>Informações Pessoais
+                </h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%">ID:</th>
+                        <td>{{ cliente.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Nome:</th>
+                        <td>{{ cliente.nome }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ cliente.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Telefone:</th>
+                        <td>{{ cliente.telefone or 'Não informado' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Data de Cadastro:</th>
+                        <td>
+                            {% if cliente.data_cadastro %}
+                                {{ cliente.data_cadastro.strftime('%d/%m/%Y às %H:%M') }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td>
+                            {% if cliente.get('ativo', 1) == 1 %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inativo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Estatísticas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="border rounded p-3">
+                            <h4 class="text-primary mb-1">{{ total_pedidos }}</h4>
+                            <small class="text-muted">Pedidos</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-3">
+                            <h4 class="text-success mb-1">R$ {{ "%.2f"|format(total_gasto) }}</h4>
+                            <small class="text-muted">Total Gasto</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-3">
+                            <h4 class="text-info mb-1">{{ total_avaliacoes }}</h4>
+                            <small class="text-muted">Avaliações</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pedidos do Cliente -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-shopping-bag me-2"></i>Histórico de Pedidos
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if pedidos %}
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Pedido ID</th>
+                        <th>Data</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido in pedidos %}
+                    <tr>
+                        <td>#{{ pedido.id }}</td>
+                        <td>
+                            {% if pedido.data_pedido %}
+                                {{ pedido.data_pedido.strftime('%d/%m/%Y %H:%M') }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>R$ {{ "%.2f"|format(pedido.total) }}</td>
+                        <td>
+                            <span class="badge bg-{{
+                                'success' if pedido.status == 'entregue'
+                                else 'warning' if pedido.status == 'pendente'
+                                else 'info' if pedido.status == 'processando'
+                                else 'secondary'
+                            }}">
+                                {{ pedido.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin_pedido_detalhes', id=pedido.id) }}"
+                               class="btn btn-sm btn-info">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-4">
+            <i class="fas fa-shopping-bag fa-2x mb-3 d-block"></i>
+            Nenhum pedido encontrado.
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Avaliações do Cliente -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-star me-2"></i>Avaliações
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if avaliacoes %}
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Nota</th>
+                        <th>Comentário</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for avaliacao in avaliacoes %}
+                    <tr>
+                        <td>{{ avaliacao.produto_nome }}</td>
+                        <td>
+                            <div class="text-warning">
+                                {% for i in range(5) %}
+                                    <i class="fas fa-star{{ ' text-muted' if i >= avaliacao.nota else '' }}"></i>
+                                {% endfor %}
+                                <small class="text-muted ms-1">({{ avaliacao.nota }}/5)</small>
+                            </div>
+                        </td>
+                        <td>
+                            {% if avaliacao.comentario %}
+                                {{ avaliacao.comentario[:100] }}{% if avaliacao.comentario|length > 100 %}...{% endif %}
+                            {% else %}
+                                <span class="text-muted">Sem comentário</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if avaliacao.data_avaliacao %}
+                                {{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-4">
+            <i class="fas fa-star fa-2x mb-3 d-block"></i>
+            Nenhuma avaliação encontrada.
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

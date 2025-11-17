@@ -8,21 +8,29 @@
         <h1 class="h3 mb-0">Gerenciar Clientes</h1>
     </div>
 </div>
+
 <!-- Botões de relatório -->
 <div class="btn-group mb-3">
-    <a href="{{ url_for('relatorio_produtos_excel') }}" class="btn btn-success btn-sm">
+    <a href="{{ url_for('relatorio_clientes_excel') }}" class="btn btn-success btn-sm">
         <i class="fas fa-file-excel"></i> Baixar Excel
     </a>
-    <a href="{{ url_for('relatorio_produtos_pdf') }}" class="btn btn-danger btn-sm">
+    <a href="{{ url_for('relatorio_clientes_pdf') }}" class="btn btn-danger btn-sm">
         <i class="fas fa-file-pdf"></i> Baixar PDF
     </a>
-    <a href="{{ url_for('salvar_relatorio_produtos_excel') }}" class="btn btn-warning btn-sm">
-        <i class="fas fa-save"></i> Salvar no Servidor
-    </a>
-    <a href="{{ url_for('lista_relatorios') }}" class="btn btn-info btn-sm">
-        <i class="fas fa-list"></i> Ver Relatórios Salvos
-    </a>
 </div>
+
+<!-- Mensagens Flash -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
 <div class="table-card">
     <div class="table-responsive">
         <table class="table table-hover">
@@ -33,16 +41,99 @@
                     <th>Email</th>
                     <th>Telefone</th>
                     <th>Data Cadastro</th>
+                    <th>Status</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
                 {% for cliente in clientes %}
                 <tr>
                     <td>{{ cliente.id }}</td>
-                    <td>{{ cliente.nome }}</td>
+                    <td>
+                        <strong>{{ cliente.nome }}</strong>
+                        {% if cliente.get('ativo', 1) == 0 %}
+                            <span class="badge bg-secondary ms-1">Inativo</span>
+                        {% endif %}
+                    </td>
                     <td>{{ cliente.email }}</td>
                     <td>{{ cliente.telefone or 'Não informado' }}</td>
-                    <td>{{ cliente.data_cadastro }}</td>
+                    <td>
+                        {% if cliente.data_cadastro %}
+                            {{ cliente.data_cadastro.strftime('%d/%m/%Y %H:%M') }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if cliente.get('ativo', 1) == 1 %}
+                            <span class="badge bg-success">Ativo</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inativo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <!-- Botão Ver Detalhes -->
+                            <a href="{{ url_for('admin_cliente_detalhes', id=cliente.id) }}"
+                               class="btn btn-info" title="Ver detalhes">
+                                <i class="fas fa-eye"></i>
+                            </a>
+
+                            <!-- Botão Desativar/Ativar -->
+                            <form method="POST" action="{{ url_for('admin_desativar_cliente', id=cliente.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-warning"
+                                        title="{{ 'Desativar' if cliente.get('ativo', 1) == 1 else 'Reativar' }}">
+                                    <i class="fas {{ 'fa-ban' if cliente.get('ativo', 1) == 1 else 'fa-check' }}"></i>
+                                </button>
+                            </form>
+
+                            <!-- Botão Excluir com Confirmação -->
+                            <button type="button" class="btn btn-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalExcluirCliente{{ cliente.id }}"
+                                    title="Excluir cliente"
+                                    {% if cliente.get('pedidos_count', 0) > 0 %}disabled{% endif %}>
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+
+                        <!-- Modal de Confirmação de Exclusão -->
+                        <div class="modal fade" id="modalExcluirCliente{{ cliente.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirmar Exclusão</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Tem certeza que deseja excluir o cliente <strong>{{ cliente.nome }}</strong>?</p>
+                                        <p class="text-danger">
+                                            <small>
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                Esta ação não pode ser desfeita. Todas as avaliações e itens do carrinho serão excluídos.
+                                            </small>
+                                        </p>
+                                        {% if cliente.get('pedidos_count', 0) > 0 %}
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            Este cliente possui pedidos e não pode ser excluído.
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        {% if cliente.get('pedidos_count', 0) == 0 %}
+                                        <form method="POST" action="{{ url_for('admin_excluir_cliente', id=cliente.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="fas fa-trash"></i> Excluir
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

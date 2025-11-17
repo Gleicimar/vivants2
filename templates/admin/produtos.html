@@ -100,6 +100,7 @@
                     </td>
                     <td>
                         <div class="btn-group btn-group-sm">
+                            <!-- Botão Editar -->
                             <button class="btn btn-info"
                                     onclick="editarProduto(
                                         {{ produto.id }},
@@ -128,7 +129,7 @@
                                 <i class="fas fa-camera"></i>
                             </button>
 
-                            <!-- Formulário de exclusão/desativação -->
+                            <!-- Botão Ativar/Desativar -->
                             <form method="POST" style="display:inline;">
                                 <input type="hidden" name="action" value="{{ 'ativar' if not produto.ativo else 'desativar' }}">
                                 <input type="hidden" name="produto_id" value="{{ produto.id }}">
@@ -138,19 +139,55 @@
                                 </button>
                             </form>
 
-                            <!-- Exclusão permanente (apenas para admin) -->
-                            {% if session.user_type == 'superadmin' %}
-                            <form method="POST" style="display:inline;">
-                                <input type="hidden" name="action" value="excluir_permanentemente">
-                                <input type="hidden" name="produto_id" value="{{ produto.id }}">
-                                <button type="submit" class="btn btn-danger"
-                                        onclick="return confirm('Tem certeza que deseja EXCLUIR PERMANENTEMENTE este produto? Esta ação não pode ser desfeita!')"
-                                        title="Excluir permanentemente">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
+                            <!-- Botão Excluir Permanente -->
+                            {% if session.user_type == 'superadmin' or session.user_type == 'admin' %}
+                            <button type="button" class="btn btn-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalExcluirProduto{{ produto.id }}"
+                                    title="Excluir permanentemente">
+                                <i class="fas fa-trash"></i>
+                            </button>
                             {% endif %}
                         </div>
+
+                        <!-- Modal de Confirmação de Exclusão -->
+                        {% if session.user_type == 'superadmin' or session.user_type == 'admin' %}
+                        <div class="modal fade" id="modalExcluirProduto{{ produto.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirmar Exclusão</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Tem certeza que deseja excluir permanentemente o produto <strong>"{{ produto.nome }}"</strong>?</p>
+                                        <p class="text-danger">
+                                            <small>
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                Esta ação não pode ser desfeita. Todas as informações, imagens e histórico relacionado a este produto serão permanentemente excluídos.
+                                            </small>
+                                        </p>
+                                        <div class="alert alert-info">
+                                            <strong>Informações do Produto:</strong><br>
+                                            ID: {{ produto.id }}<br>
+                                            Nome: {{ produto.nome }}<br>
+                                            Categoria: {{ produto.categoria_nome }}<br>
+                                            Estoque: {{ produto.estoque }} unidades<br>
+                                            Status: {{ 'Ativo' if produto.ativo else 'Inativo' }}
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <form method="POST" action="{{ url_for('admin_excluir_produto', id=produto.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="fas fa-trash"></i> Excluir Permanentemente
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -490,3 +527,4 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 {% endblock %}
+

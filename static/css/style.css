@@ -797,11 +797,12 @@ footer {
 }
 .col-md-6 {
     display: flex;
-    flex-direction: column;
+
     justify-content: center;
     flex-wrap: wrap;
     align-items: center;
 }
+
 .product-detail-container {
     animation: fadeInUp 0.6s ease;
     max-width: 1280px;
