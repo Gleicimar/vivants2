@@ -1,4 +1,21 @@
 // Vivants - JavaScript para o template original
+const  Menu = document.querySelector(".menu_mobile")
+const   nav_menu = document.querySelector('.menu')
+const  icon  = Menu.querySelector('i')
+
+Menu.addEventListener("click", ()=>{
+    nav_menu.classList.toggle("active")
+    if (icon.classList.contains('fa-bars')){
+        icon.classList.remove('fa-bars');
+        icon.classList.add("fa-times");
+    }else{
+        icon.classList.remove("fa-times");
+        icon.classList.add("fa-bars");
+
+    }
+
+})
+
 document.addEventListener('DOMContentLoaded', function() {
     // Slider Principal
     initMainSlider();
