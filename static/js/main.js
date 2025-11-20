@@ -16,6 +16,7 @@ Menu.addEventListener("click", ()=>{
 
 })
 
+
 document.addEventListener('DOMContentLoaded', function() {
     // Slider Principal
     initMainSlider();

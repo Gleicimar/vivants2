@@ -1,13 +1,11 @@
 :root {
-    --primary: #fcd000;
-    --secondary: #eb9f00;
+    --primary-color: #fcd000;
+     --secondary-color: #eb9f00;
     --success: #28a745;
     --warning: #ffc107;
     --danger: #dc3545;
     --light: #f8f9fa;
     --dark: #343a40;
-    --primary-color: #fcd000;
-    --secondary-color: #eb9f00;
     --background-color: #37321f;
     --text-color: #333333;
     --volta--color: #585757;
@@ -82,11 +80,6 @@ header > .center {
     align-items: center;
 }
 
-.mobile {
-    font-size: 27px;
-    color: var(--secondary-color);
-    display: none;
-}
 
 /* LOGO - PATH CORRIGIDO */
 a.logo {
@@ -105,20 +98,17 @@ a.logo {
     font-size: 27px;
 }
 .menu_mobile:hover{
-   background-image: var(--gradiente-vivants);
+     background-image: var(--gradiente-vivants);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 
 }
-.menu {
+ .menu {
     display: flex;
     flex-direction: row;
     list-style: none;
 }
 
-.menu li {
-    position: relative;
-}
 
 .menu li a {
     margin: 0 1rem;
@@ -727,14 +717,14 @@ footer {
 
 /* Estilos do Sistema (Mantidos para compatibilidade) */
 .hero {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var( --secondary-color) 100%);
     color: white;
     padding: 100px 0;
     text-align: center;
 }
 
 .navbar-custom {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var( --secondary-color) 100%);
 }
 
 .product-card {
@@ -759,7 +749,7 @@ footer {
 }
 
 .btn-vivants {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var( --secondary-color) 100%);
     border: none;
     color: white;
     margin:2rem 0;
@@ -776,7 +766,7 @@ footer {
     opacity: 0.9;
 }
 .volta{
-     background: linear-gradient(135deg, var(--volta--color) 0%, var(--secondary) 100%);
+     background: linear-gradient(135deg, var(--volta--color) 0%, var( --secondary-color) 100%);
     border: none;
     color: white;
     margin:2rem 0;
@@ -794,7 +784,7 @@ footer {
 }
 .btn-outline-secondary{
     text-decoration: none;
-    color: var(--primary-color);
+    color: var(--primary-color-color);
     border-radius: 20%;
     background-color: #f8f9fa ;
     width: 200px ;
@@ -827,14 +817,14 @@ footer {
 }
 
 .breadcrumb a {
-    color: var(--primary-color);
+    color: var(--primary-color-color);
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s ease;
 }
 
 .breadcrumb a:hover {
-    color: var(--secondary-color);
+    color: var( --secondary-color-color);
 }
 
 .product-detail-grid {
@@ -867,7 +857,7 @@ footer {
 
 .product-image-section .fa-star {
     font-size: 8rem;
-    color: var(--primary-color);
+    color: var(--primary-color-color);
 }
 
 /* Seção de Informações */
@@ -900,7 +890,7 @@ footer {
     background: #f8f9fa;
     padding: 25px;
     border-radius: 10px;
-    border-left: 4px solid var(--primary-color);
+    border-left: 4px solid var(--primary-color-color);
     margin-bottom: 30px;
     position: relative;
     overflow: hidden;
@@ -988,7 +978,7 @@ footer {
 .quantity-controls {
     display: flex;
     align-items: center;
-    border: 2px solid var(--primary-color);
+    border: 2px solid var(--primary-color-color);
     border-radius: 25px;
     overflow: hidden;
     transition: all 0.3s ease;
@@ -1008,7 +998,7 @@ footer {
 }
 
 .quantity-controls button:hover {
-    background: var(--primary-color);
+    background: var(--primary-color-color);
     color: white;
 }
 
@@ -1109,7 +1099,7 @@ footer {
 }
 
 .feature-item i {
-    color: var(--primary-color);
+    color: var(--primary-color-color);
     transition: transform 0.3s ease;
 }
 
@@ -1135,7 +1125,7 @@ footer {
 }
 
 .reviews-count {
-    background: var(--primary-color);
+    background: var(--primary-color-color);
     color: white;
     padding: 2px 10px;
     border-radius: 15px;
@@ -1155,7 +1145,7 @@ footer {
 .review-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-    border-left-color: var(--primary-color);
+    border-left-color: var(--primary-color-color);
 }
 
 .review-header {
@@ -1171,7 +1161,7 @@ footer {
 }
 
 .review-stars {
-    color: var(--primary-color);
+    color: var(--primary-color-color);
 }
 
 .review-date {
@@ -1198,7 +1188,7 @@ footer {
 
 .no-reviews .fa-comments {
     font-size: 3rem;
-    color: var(--primary-color);
+    color: var(--primary-color-color);
     margin-bottom: 15px;
 }
 
@@ -1246,7 +1236,7 @@ footer {
 
 .rating-option input:checked + label {
     background: rgba(235, 159, 0, 0.2);
-    border: 2px solid var(--primary-color);
+    border: 2px solid var(--primary-color-color);
 }
 
 .review-textarea {
@@ -1262,7 +1252,7 @@ footer {
 
 .review-textarea:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: var(--primary-color-color);
 }
 
 .btn-submit-review {
@@ -1329,7 +1319,7 @@ footer {
 
 .related-product:hover {
     transform: translateX(10px);
-    border-color: var(--primary-color);
+    border-color: var(--primary-color-color);
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     text-decoration: none;
     color: inherit;
@@ -1347,7 +1337,7 @@ footer {
 }
 
 .related-product-image i {
-    color: var(--primary-color);
+    color: var(--primary-color-color);
     transition: transform 0.3s ease;
 }
 
@@ -1410,7 +1400,7 @@ footer {
     height: 20px;
     margin: -10px 0 0 -10px;
     border: 2px solid #f3f3f3;
-    border-top: 2px solid var(--primary-color);
+    border-top: 2px solid var(--primary-color-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -1424,7 +1414,7 @@ footer {
 button:focus,
 input:focus,
 textarea:focus {
-    outline: 2px solid var(--primary-color);
+    outline: 2px solid var(--primary-color-color);
     outline-offset: 2px;
 }
 
@@ -1435,27 +1425,31 @@ textarea:focus {
 
 /* Responsividade */
 @media (max-width: 968px) {
+   .menu_mobile{
+    visibility:visible;
+   }
     .menu{
-        display: flex;
-        width:100%;
-        margin-top: 389px;
-        background-color:white;
-        flex-direction:column
-        z-index:1000;
-    }
 
-    .menu_mobile{
-        visibility: visible;
-    }
-    .menu.active{
-        display: flex;
         flex-direction: column;
-        background: aliceblue;
         width: 100%;
-
-        z-index: 1000;
+        background-color: #feffffa4;
+        position: absolute;
+        top: 136px;
+        left: 0;
+        padding: 20px;
+        z-index: 99;
     }
 
+    .menu.active{
+display: flex !important
+    }
+    .submenu_parent{
+        display: flex;
+        align-items: center;
+    }
+    .men_foot{
+        display:none
+    }
     .product-detail-grid {
         grid-template-columns: 1fr;
         gap: 30px;
@@ -1476,7 +1470,9 @@ textarea:focus {
 }
 
 @media (max-width: 768px) {
-
+.slider{
+    height: 60%;
+}
     .product-detail-container {
         padding: 0 15px;
     }
