@@ -1426,7 +1426,7 @@ textarea:focus {
 /* Responsividade */
 @media (max-width: 968px) {
    .menu_mobile{
-    visibility:hidden;
+    visibility:visible;
    }
     .menu{
 
@@ -1608,5 +1608,187 @@ display: flex !important
     .vivants_professional h1,
     .materia_prima h1 {
         font-size: 28px;
+    }
+}
+/* =========================================================
+   RESPONSIVIDADE
+========================================================= */
+
+/* =======================
+   MOBILE — até 480px
+======================= */
+@media (max-width: 480px) {
+
+    /* HEADER */
+    .menu {
+        display: none;
+        flex-direction: column;
+        background-color: white;
+        width: 100%;
+        position: absolute;
+        top: 120px;
+        left: 0;
+        padding: 20px;
+        border-top: 1px solid #eee;
+    }
+
+    .menu_mobile {
+        visibility: visible;
+        cursor: pointer;
+    }
+
+    /* SLIDER */
+    .slider {
+        height: 300px;
+    }
+
+    .slide-content h1 {
+        font-size: 1.8rem;
+    }
+
+    .slide-content p {
+        font-size: 1rem;
+    }
+
+    /* SEÇÕES */
+    .vivants h1,
+    .vivants_professional h1,
+    .materia_prima h1 {
+        font-size: 28px;
+    }
+
+    .vivants p,
+    .materia_prima p {
+        font-size: 16px;
+        text-align: center;
+    }
+
+    /* IMAGENS PROFISSIONAIS */
+    .image_container {
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .image_container img {
+        height: 200px;
+    }
+
+    /* MATÉRIA PRIMA */
+    .materia_prima .center {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .slider_mp {
+        width: 100%;
+        height: 350px;
+    }
+
+    /* PRODUTO */
+    .product-detail-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    /* FOOTER */
+    .foot_wrapper {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .tradutor_wrapper {
+        flex-direction: column;
+        height: auto;
+        padding: 10px 0;
+    }
+}
+
+/* =======================
+   TABLET — 481px até 768px
+======================= */
+@media (min-width: 481px) and (max-width: 768px) {
+
+    /* MENU */
+    .menu {
+        display: none;
+        flex-direction: column;
+        background: white;
+        position: absolute;
+        top: 120px;
+        width: 100%;
+        padding: 20px;
+        left: 0;
+    }
+
+    .menu_mobile {
+        visibility: visible;
+    }
+
+    /* SLIDER */
+    .slider {
+        height: 380px;
+    }
+
+    .slide-content h1 {
+        font-size: 2.3rem;
+    }
+
+    /* GRID PROFISSIONAL */
+    .image_container {
+        width: calc(50% - 20px);
+    }
+
+    /* PRODUTO */
+    .product-detail-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    /* MATÉRIA PRIMA */
+    .materia_prima .center {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .slider_mp {
+        width: 100%;
+        height: 420px;
+    }
+}
+
+/* =======================
+   NOTEBOOKS — 769px até 1024px
+======================= */
+@media (min-width: 769px) and (max-width: 1024px) {
+
+    /* MENU */
+    .menu li a {
+        font-size: 16px;
+        margin: 0 0.5rem;
+    }
+
+    /* SLIDER */
+    .slider {
+        height: 420px;
+    }
+
+    .slide-content h1 {
+        font-size: 2.6rem;
+    }
+
+    /* GRID PROFISSIONAL */
+    .image_container {
+        width: calc(33.333% - 20px);
+    }
+
+    /* PRODUTO */
+    .product-detail-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    /* MATÉRIA PRIMA */
+    .slider_mp {
+        height: 500px;
     }
 }

@@ -20,13 +20,12 @@
   <header>
     <div class="center">
       <a class="logo" href="{{ url_for('index') }}"></a>
-      <h3 class="menu_mobile"><i class="fas fa-bars"></i>Menu+</h3>
+      <h3 class="menu_mobile"><i class="fas fa-bars"></i></h3>
       <ul class="menu">
         <li><a href="{{ url_for('index') }}">Home</a></li>
         <li><a href="#sobre">A Vivants</a></li>
         <li class="submenu_parent">
           <a href="{{ url_for('produtos_lista') }}">Produtos <i class="fa-solid fa-caret-down"></i></a>
-          <h3 class="mobile"><i class="fa-solid fa-caret-down"></i>+</h3>
           <ul class="submenu">
             <li><a href="{{ url_for('produtos_lista') }}">Tratamentos</a></li>
             <li><a href="{{ url_for('produtos_lista') }}">Hidratação</a></li>
