@@ -1,408 +1,426 @@
 import pandas as pd
 from io import BytesIO
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import (
+    SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, Frame
+)
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
-from reportlab.lib.units import inch
+from reportlab.lib.units import inch, mm
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import os
+import math
 
-# Configuração da pasta de relatórios
-RELATORIOS_DIR = os.path.join(os.path.dirname(__file__), 'static', 'relatorios')
+# -----------------------
+# Configuração / Helpers
+# -----------------------
+def agora_brasil():
+    """Retorna datetime com timezone America/Sao_Paulo"""
+    return datetime.now(ZoneInfo("America/Sao_Paulo"))
 
-# Criar pasta se não existir
-if not os.path.exists(RELATORIOS_DIR):
-    os.makedirs(RELATORIOS_DIR)
+# Pasta de relatórios
+RELATORIOS_DIR = os.path.join(os.path.dirname(__file__), "static", "relatorios")
+os.makedirs(RELATORIOS_DIR, exist_ok=True)
 
+# Estilos globais
+_styles = getSampleStyleSheet()
+TITLE_STYLE = ParagraphStyle(
+    "ReportTitle",
+    parent=_styles["Heading1"],
+    fontSize=16,
+    leading=20,
+    alignment=1,  # center
+    spaceAfter=12
+)
+META_STYLE = ParagraphStyle(
+    "Meta",
+    parent=_styles["Normal"],
+    fontSize=9,
+    leading=12,
+    alignment=1  # center
+)
+NORMAL_STYLE = ParagraphStyle(
+    "NormalLeft",
+    parent=_styles["Normal"],
+    fontSize=9,
+    leading=12,
+    alignment=0  # left
+)
+FOOTER_STYLE = ParagraphStyle(
+    "Footer",
+    parent=_styles["Normal"],
+    fontSize=8,
+    leading=10,
+    alignment=1
+)
+
+# -----------------------
+# Util: calcular larguras
+# -----------------------
+def calcular_col_widths(data_rows, page_width=A4[0], left_margin=36, right_margin=36, min_col=30, max_col=300):
+    """
+    Estima larguras de colunas com base no conteúdo textual.
+    Retorna lista de larguras em pontos que somam no máximo page_width - margins.
+    """
+    usable_width = page_width - left_margin - right_margin
+    # transpor
+    cols = list(zip(*data_rows))
+    # medimos comprimento aproximado (número de caracteres)
+    lengths = [max(len(str(cell)) for cell in col) for col in cols]
+    total = sum(lengths) or 1
+    # converte para width proporcional
+    widths = []
+    for l in lengths:
+        w = max(min_col, min(max_col, math.ceil((l / total) * usable_width)))
+        widths.append(w)
+    # ajustar soma para não ultrapassar usable_width
+    current = sum(widths)
+    if current != usable_width:
+        diff = usable_width - current
+        # distribuir diff proporcionalmente (simples)
+        for i in range(len(widths)):
+            add = math.floor(diff * (widths[i] / current)) if current else 0
+            widths[i] += add
+        # corrigir qualquer sobra
+        while sum(widths) < usable_width:
+            for i in range(len(widths)):
+                widths[i] += 1
+                if sum(widths) >= usable_width:
+                    break
+        while sum(widths) > usable_width:
+            for i in range(len(widths)):
+                if widths[i] > min_col:
+                    widths[i] -= 1
+                if sum(widths) <= usable_width:
+                    break
+    return widths
+
+# -----------------------
+# Util: header & footer
+# -----------------------
+def _cabecalho(canvas, doc, titulo):
+    canvas.saveState()
+    w, h = A4
+    left = doc.leftMargin
+    right = doc.rightMargin
+    # Linha superior sutil
+    canvas.setStrokeColor(colors.HexColor("#e0e0e0"))
+    canvas.setLineWidth(0.5)
+    canvas.line(left, h - 36, w - right, h - 36)
+    # Título (já centrado via Paragraph no fluxo, aqui podemos colocar somente uma linha discreta)
+    canvas.restoreState()
+
+def _rodape(canvas, doc):
+    canvas.saveState()
+    w, h = A4
+    page_num = canvas.getPageNumber()
+    footer_text = f"Vivants — Relatório gerado em {agora_brasil().strftime('%d/%m/%Y %H:%M')} — Página {page_num}"
+    canvas.setFont("Helvetica", 8)
+    canvas.setFillColor(colors.grey)
+    canvas.drawCentredString(w / 2.0, 12 * mm, footer_text)
+    canvas.restoreState()
+
+# -----------------------
+# Util: criar tabela estilizada (zebra, cabeçalho escuro)
+# -----------------------
+def criar_tabela_estilizada(data_rows, col_widths=None, repeat_header=True):
+    """
+    Gera Table com estilo corporativo:
+    - Cabeçalho escuro com texto branco
+    - Linhas zebradas (bege / branco)
+    - Grid fino
+    """
+    if col_widths is None:
+        col_widths = calcular_col_widths(data_rows)
+
+    table = Table(data_rows, colWidths=col_widths, repeatRows=1 if repeat_header else 0)
+
+    # Base style
+    style = TableStyle([
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 9),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LINEBEFORE", (0, 0), (-1, -1), 0.25, colors.HexColor("#dddddd")),
+        ("LINEAFTER", (0, 0), (-1, -1), 0.25, colors.HexColor("#dddddd")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#dddddd")),
+        ("BOX", (0, 0), (-1, -1), 0.25, colors.HexColor("#dddddd")),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
+        ("TOPPADDING", (0, 0), (-1, 0), 8),
+    ])
+
+    # Cabeçalho escuro
+    style.add("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#6c757d"))
+    style.add("TEXTCOLOR", (0, 0), (-1, 0), colors.white)
+
+    # Zebra para linhas alternadas
+    for idx in range(1, len(data_rows)):
+        bg = colors.whitesmoke if idx % 2 == 0 else colors.beige
+        style.add("BACKGROUND", (0, idx), (-1, idx), bg)
+
+    table.setStyle(style)
+    return table
+
+# -----------------------
+# EXCEL: produtos, pedidos, clientes (mantive implementação simples)
+# -----------------------
 def gerar_excel_produtos(produtos, salvar_arquivo=False):
-    """Gera relatório de produtos em Excel"""
-    # Criar DataFrame
     data = []
     for produto in produtos:
         data.append({
-            'ID': produto['id'],
-            'Nome': produto['nome'],
-            'Categoria': produto['categoria_nome'],
-            'Preço': f"R$ {produto['preco']:.2f}",
-            'Preço Promocional': f"R$ {produto['preco_promocional']:.2f}" if produto['preco_promocional'] else '',
-            'Estoque': produto['estoque'],
-            'Destaque': 'Sim' if produto['destaque'] else 'Não',
-            'Data Cadastro': produto['data_cadastro']
+            "ID": produto["id"],
+            "Nome": produto["nome"],
+            "Categoria": produto["categoria_nome"],
+            "Preço": f"R$ {produto['preco']:.2f}",
+            "Preço Promocional": f"R$ {produto['preco_promocional']:.2f}" if produto.get("preco_promocional") else "",
+            "Estoque": produto.get("estoque", ""),
+            "Destaque": "Sim" if produto.get("destaque") else "Não",
+            "Data Cadastro": produto.get("data_cadastro", "")
         })
-
     df = pd.DataFrame(data)
+    filename = f"relatorio_produtos_{agora_brasil().strftime('%Y%m%d_%H%M%S')}.xlsx"
 
     if salvar_arquivo:
-        # Salvar no servidor
-        filename = f"relatorio_produtos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
         filepath = os.path.join(RELATORIOS_DIR, filename)
-
-        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='Produtos', index=False)
-
-            # Formatar a planilha
-            worksheet = writer.sheets['Produtos']
-            worksheet.column_dimensions['A'].width = 8
-            worksheet.column_dimensions['B'].width = 30
-            worksheet.column_dimensions['C'].width = 20
-            worksheet.column_dimensions['D'].width = 12
-            worksheet.column_dimensions['E'].width = 15
-            worksheet.column_dimensions['F'].width = 10
-            worksheet.column_dimensions['G'].width = 10
-            worksheet.column_dimensions['H'].width = 15
-
+        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+            df.to_excel(writer, sheet_name="Produtos", index=False)
+            ws = writer.sheets["Produtos"]
+            for col, width in zip("ABCDEFGH", [8, 30, 20, 12, 15, 10, 10, 15]):
+                ws.column_dimensions[col].width = width
         return filename, filepath
-    else:
-        # Gerar em memória
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='Produtos', index=False)
 
-            worksheet = writer.sheets['Produtos']
-            worksheet.column_dimensions['A'].width = 8
-            worksheet.column_dimensions['B'].width = 30
-            worksheet.column_dimensions['C'].width = 20
-            worksheet.column_dimensions['D'].width = 12
-            worksheet.column_dimensions['E'].width = 15
-            worksheet.column_dimensions['F'].width = 10
-            worksheet.column_dimensions['G'].width = 10
-            worksheet.column_dimensions['H'].width = 15
-
-        output.seek(0)
-        return output
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, sheet_name="Produtos", index=False)
+    output.seek(0)
+    return output
 
 def gerar_excel_pedidos(pedidos, salvar_arquivo=False):
-    """Gera relatório de pedidos em Excel"""
     data = []
     for pedido in pedidos:
         data.append({
-            'ID': pedido['id'],
-            'Cliente': pedido['cliente_nome'],
-            'Email': pedido['cliente_email'],
-            'Total': f"R$ {pedido['total']:.2f}",
-            'Status': pedido['status'].upper(),
-            'Data Pedido': pedido['data_pedido'],
-            'Endereço': pedido['endereco_entrega']
+            "ID": pedido["id"],
+            "Cliente": pedido["cliente_nome"],
+            "Email": pedido.get("cliente_email", ""),
+            "Total": f"R$ {pedido['total']:.2f}",
+            "Status": pedido.get("status", "").upper(),
+            "Data Pedido": pedido.get("data_pedido", ""),
+            "Endereço": pedido.get("endereco_entrega", "")
         })
-
     df = pd.DataFrame(data)
+    filename = f"relatorio_pedidos_{agora_brasil().strftime('%Y%m%d_%H%M%S')}.xlsx"
 
     if salvar_arquivo:
-        filename = f"relatorio_pedidos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
         filepath = os.path.join(RELATORIOS_DIR, filename)
-
-        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='Pedidos', index=False)
-
-            worksheet = writer.sheets['Pedidos']
-            worksheet.column_dimensions['A'].width = 8
-            worksheet.column_dimensions['B'].width = 25
-            worksheet.column_dimensions['C'].width = 25
-            worksheet.column_dimensions['D'].width = 12
-            worksheet.column_dimensions['E'].width = 15
-            worksheet.column_dimensions['F'].width = 15
-            worksheet.column_dimensions['G'].width = 30
-
+        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+            df.to_excel(writer, sheet_name="Pedidos", index=False)
+            ws = writer.sheets["Pedidos"]
+            for col, width in zip("ABCDEFG", [8, 25, 25, 12, 15, 15, 30]):
+                ws.column_dimensions[col].width = width
         return filename, filepath
-    else:
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='Pedidos', index=False)
 
-            worksheet = writer.sheets['Pedidos']
-            worksheet.column_dimensions['A'].width = 8
-            worksheet.column_dimensions['B'].width = 25
-            worksheet.column_dimensions['C'].width = 25
-            worksheet.column_dimensions['D'].width = 12
-            worksheet.column_dimensions['E'].width = 15
-            worksheet.column_dimensions['F'].width = 15
-            worksheet.column_dimensions['G'].width = 30
-
-        output.seek(0)
-        return output
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, sheet_name="Pedidos", index=False)
+    output.seek(0)
+    return output
 
 def gerar_excel_clientes(clientes, salvar_arquivo=False):
-    """Gera relatório de clientes em Excel"""
     data = []
     for cliente in clientes:
         data.append({
-            'ID': cliente['id'],
-            'Nome': cliente['nome'],
-            'Email': cliente['email'],
-            'Telefone': cliente['telefone'] or 'Não informado',
-            'Data Cadastro': cliente['data_cadastro']
+            "ID": cliente["id"],
+            "Nome": cliente["nome"],
+            "Email": cliente.get("email", ""),
+            "Telefone": cliente.get("telefone") or "Não informado",
+            "Data Cadastro": cliente.get("data_cadastro", "")
         })
-
     df = pd.DataFrame(data)
+    filename = f"relatorio_clientes_{agora_brasil().strftime('%Y%m%d_%H%M%S')}.xlsx"
 
     if salvar_arquivo:
-        filename = f"relatorio_clientes_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
         filepath = os.path.join(RELATORIOS_DIR, filename)
-
-        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='Clientes', index=False)
-
-            worksheet = writer.sheets['Clientes']
-            worksheet.column_dimensions['A'].width = 8
-            worksheet.column_dimensions['B'].width = 25
-            worksheet.column_dimensions['C'].width = 25
-            worksheet.column_dimensions['D'].width = 20
-            worksheet.column_dimensions['E'].width = 15
-
+        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+            df.to_excel(writer, sheet_name="Clientes", index=False)
+            ws = writer.sheets["Clientes"]
+            for col, width in zip("ABCDE", [8, 25, 25, 20, 15]):
+                ws.column_dimensions[col].width = width
         return filename, filepath
-    else:
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='Clientes', index=False)
 
-            worksheet = writer.sheets['Clientes']
-            worksheet.column_dimensions['A'].width = 8
-            worksheet.column_dimensions['B'].width = 25
-            worksheet.column_dimensions['C'].width = 25
-            worksheet.column_dimensions['D'].width = 20
-            worksheet.column_dimensions['E'].width = 15
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, sheet_name="Clientes", index=False)
+    output.seek(0)
+    return output
 
-        output.seek(0)
-        return output
-
+# -----------------------
+# PDF: Produtos, Pedidos, Clientes (com espaçamento maior entre título e "Emitido em")
+# -----------------------
 def gerar_pdf_produtos(produtos, salvar_arquivo=False):
-    """Gera relatório de produtos em PDF"""
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1*inch)
+    filename = f"relatorio_produtos_{agora_brasil().strftime('%Y%m%d_%H%M%S')}.pdf"
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=48, bottomMargin=48)
 
-    # Estilos
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=16,
-        spaceAfter=30,
-        alignment=1
-    )
+    # Header title + emission (com espaçamento aumentado)
+    titulo = Paragraph("RELATÓRIO DE PRODUTOS - VIVANTS", TITLE_STYLE)
+    # Espaçamento maior solicitado entre o título e a linha "Emitido em"
+    emitido = Paragraph(f"Emitido em: {agora_brasil().strftime('%d/%m/%Y %H:%M')}", META_STYLE)
 
-    # Conteúdo
-    elements = []
-
-    # Título
-    title = Paragraph("RELATÓRIO DE PRODUTOS - VIVANTS", title_style)
-    elements.append(title)
-
-    # Data de emissão
-    data_emissao = Paragraph(f"Emitido em: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal'])
-    elements.append(data_emissao)
-    elements.append(Spacer(1, 20))
-
-    # Tabela de dados
-    data = [['ID', 'Nome', 'Categoria', 'Preço', 'Estoque', 'Destaque']]
-
-    for produto in produtos:
+    data = [["ID", "Nome", "Categoria", "Preço", "Estoque", "Destaque"]]
+    for p in produtos:
         data.append([
-            str(produto['id']),
-            produto['nome'],
-            produto['categoria_nome'],
-            f"R$ {produto['preco']:.2f}",
-            str(produto['estoque']),
-            'Sim' if produto['destaque'] else 'Não'
+            str(p.get("id", "")),
+            p.get("nome", ""),
+            p.get("categoria_nome", ""),
+            f"R$ {p.get('preco', 0):.2f}",
+            str(p.get("estoque", "")),
+            "Sim" if p.get("destaque") else "Não"
         ])
 
-    table = Table(data, colWidths=[0.5*inch, 2.5*inch, 1.5*inch, 1*inch, 0.8*inch, 0.8*inch])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('FONTSIZE', (0, 1), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
-    ]))
+    col_widths = calcular_col_widths(data, page_width=A4[0], left_margin=doc.leftMargin, right_margin=doc.rightMargin)
+    tabela = criar_tabela_estilizada(data, col_widths)
 
-    elements.append(table)
+    elements = [
+        titulo,
+        Spacer(1, 12),            # mantém espaçamento padrão abaixo do título
+        emitido,
+        Spacer(1, 18),            # >>> AUMENTEI esse Spacer para ampliar o espaço pedido
+        tabela,
+        Spacer(1, 12),
+        Paragraph(f"Total de produtos: {len(produtos)}", NORMAL_STYLE)
+    ]
 
-    # Rodapé
-    elements.append(Spacer(1, 20))
-    total_produtos = Paragraph(f"Total de produtos: {len(produtos)}", styles['Normal'])
-    elements.append(total_produtos)
-
-    doc.build(elements)
+    # build com header/footer
+    doc.build(elements, onFirstPage=lambda c, d: (_cabecalho(c, d, titulo), _rodape(c, d)),
+              onLaterPages=lambda c, d: (_cabecalho(c, d, titulo), _rodape(c, d)))
 
     if salvar_arquivo:
-        filename = f"relatorio_produtos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         filepath = os.path.join(RELATORIOS_DIR, filename)
-
-        with open(filepath, 'wb') as f:
+        with open(filepath, "wb") as f:
             f.write(buffer.getvalue())
-
         return filename, filepath
-    else:
-        buffer.seek(0)
-        return buffer
+
+    buffer.seek(0)
+    return buffer
 
 def gerar_pdf_pedidos(pedidos, salvar_arquivo=False):
-    """Gera relatório de pedidos em PDF"""
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1*inch)
+    filename = f"relatorio_pedidos_{agora_brasil().strftime('%Y%m%d_%H%M%S')}.pdf"
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=48, bottomMargin=48)
 
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=16,
-        spaceAfter=30,
-        alignment=1
-    )
+    titulo = Paragraph("RELATÓRIO DE PEDIDOS - VIVANTS", TITLE_STYLE)
+    emitido = Paragraph(f"Emitido em: {agora_brasil().strftime('%d/%m/%Y %H:%M')}", META_STYLE)
 
-    elements = []
-
-    # Título
-    title = Paragraph("RELATÓRIO DE PEDIDOS - VIVANTS", title_style)
-    elements.append(title)
-
-    # Data de emissão
-    data_emissao = Paragraph(f"Emitido em: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal'])
-    elements.append(data_emissao)
-    elements.append(Spacer(1, 20))
-
-    # Tabela
-    data = [['ID', 'Cliente', 'Total', 'Status', 'Data']]
-
-    for pedido in pedidos:
+    data = [["ID", "Cliente", "Total", "Status", "Data"]]
+    for ped in pedidos:
         data.append([
-            f"#{pedido['id']}",
-            pedido['cliente_nome'],
-            f"R$ {pedido['total']:.2f}",
-            pedido['status'].upper(),
-            pedido['data_pedido']
+            f"#{ped.get('id', '')}",
+            ped.get("cliente_nome", ""),
+            f"R$ {ped.get('total', 0):.2f}",
+            ped.get("status", "").upper(),
+            ped.get("data_pedido", "")
         ])
 
-    table = Table(data, colWidths=[0.6*inch, 2.5*inch, 1.2*inch, 1.2*inch, 1.5*inch])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('FONTSIZE', (0, 1), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
-    ]))
+    col_widths = calcular_col_widths(data, page_width=A4[0], left_margin=doc.leftMargin, right_margin=doc.rightMargin)
+    tabela = criar_tabela_estilizada(data, col_widths)
 
-    elements.append(table)
+    faturamento = sum(p.get("total", 0) for p in pedidos)
 
-    # Estatísticas
-    elements.append(Spacer(1, 20))
-    total_pedidos = Paragraph(f"Total de pedidos: {len(pedidos)}", styles['Normal'])
-    faturamento_total = sum(pedido['total'] for pedido in pedidos)
-    faturamento = Paragraph(f"Faturamento total: R$ {faturamento_total:.2f}", styles['Normal'])
+    elements = [
+        titulo,
+        Spacer(1, 12),
+        emitido,
+        Spacer(1, 18),            # espaço aumentado entre título e emitido em
+        tabela,
+        Spacer(1, 12),
+        Paragraph(f"Total de pedidos: {len(pedidos)}", NORMAL_STYLE),
+        Paragraph(f"Faturamento total: R$ {faturamento:.2f}", NORMAL_STYLE)
+    ]
 
-    elements.append(total_pedidos)
-    elements.append(faturamento)
-
-    doc.build(elements)
+    doc.build(elements, onFirstPage=lambda c, d: (_cabecalho(c, d, titulo), _rodape(c, d)),
+              onLaterPages=lambda c, d: (_cabecalho(c, d, titulo), _rodape(c, d)))
 
     if salvar_arquivo:
-        filename = f"relatorio_pedidos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         filepath = os.path.join(RELATORIOS_DIR, filename)
-
-        with open(filepath, 'wb') as f:
+        with open(filepath, "wb") as f:
             f.write(buffer.getvalue())
-
         return filename, filepath
-    else:
-        buffer.seek(0)
-        return buffer
+
+    buffer.seek(0)
+    return buffer
 
 def gerar_pdf_clientes(clientes, salvar_arquivo=False):
-    """Gera relatório de clientes em PDF"""
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1*inch)
+    filename = f"relatorio_clientes_{agora_brasil().strftime('%Y%m%d_%H%M%S')}.pdf"
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=48, bottomMargin=48)
 
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=16,
-        spaceAfter=30,
-        alignment=1
-    )
+    titulo = Paragraph("RELATÓRIO DE CLIENTES - VIVANTS", TITLE_STYLE)
+    emitido = Paragraph(f"Emitido em: {agora_brasil().strftime('%d/%m/%Y %H:%M')}", META_STYLE)
 
-    elements = []
-
-    # Título
-    title = Paragraph("RELATÓRIO DE CLIENTES - VIVANTS", title_style)
-    elements.append(title)
-
-    # Data de emissão
-    data_emissao = Paragraph(f"Emitido em: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal'])
-    elements.append(data_emissao)
-    elements.append(Spacer(1, 20))
-
-    # Tabela
-    data = [['ID', 'Nome', 'Email', 'Telefone', 'Cadastro']]
-
-    for cliente in clientes:
+    data = [["ID", "Nome", "Email", "Telefone", "Cadastro"]]
+    for c in clientes:
         data.append([
-            str(cliente['id']),
-            cliente['nome'],
-            cliente['email'],
-            cliente['telefone'] or 'Não informado',
-            cliente['data_cadastro']
+            str(c.get("id", "")),
+            c.get("nome", ""),
+            c.get("email", ""),
+            c.get("telefone") or "Não informado",
+            c.get("data_cadastro", "")
         ])
 
-    table = Table(data, colWidths=[0.5*inch, 2*inch, 2*inch, 1.5*inch, 1.2*inch])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('FONTSIZE', (0, 1), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
-    ]))
+    col_widths = calcular_col_widths(data, page_width=A4[0], left_margin=doc.leftMargin, right_margin=doc.rightMargin)
+    tabela = criar_tabela_estilizada(data, col_widths)
 
-    elements.append(table)
+    elements = [
+        titulo,
+        Spacer(1, 12),
+        emitido,
+        Spacer(1, 18),            # espaço aumentado entre título e emitido em
+        tabela,
+        Spacer(1, 12),
+        Paragraph(f"Total de clientes: {len(clientes)}", NORMAL_STYLE)
+    ]
 
-    # Estatísticas
-    elements.append(Spacer(1, 20))
-    total_clientes = Paragraph(f"Total de clientes: {len(clientes)}", styles['Normal'])
-    elements.append(total_clientes)
-
-    doc.build(elements)
+    doc.build(elements, onFirstPage=lambda c, d: (_cabecalho(c, d, titulo), _rodape(c, d)),
+              onLaterPages=lambda c, d: (_cabecalho(c, d, titulo), _rodape(c, d)))
 
     if salvar_arquivo:
-        filename = f"relatorio_clientes_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         filepath = os.path.join(RELATORIOS_DIR, filename)
-
-        with open(filepath, 'wb') as f:
+        with open(filepath, "wb") as f:
             f.write(buffer.getvalue())
-
         return filename, filepath
-    else:
-        buffer.seek(0)
-        return buffer
 
+    buffer.seek(0)
+    return buffer
+
+# -----------------------
+# Listar relatórios salvos
+# -----------------------
 def listar_relatorios():
-    """Lista todos os relatórios salvos"""
     relatorios = []
-
     if os.path.exists(RELATORIOS_DIR):
         for filename in os.listdir(RELATORIOS_DIR):
-            if filename.endswith(('.xlsx', '.pdf')):
+            if filename.endswith((".xlsx", ".pdf")):
                 filepath = os.path.join(RELATORIOS_DIR, filename)
                 stat = os.stat(filepath)
                 relatorios.append({
-                    'nome': filename,
-                    'caminho': filepath,
-                    'tamanho': stat.st_size,
-                    'data_criacao': datetime.fromtimestamp(stat.st_ctime),
-                    'tipo': 'Excel' if filename.endswith('.xlsx') else 'PDF'
+                    "nome": filename,
+                    "caminho": filepath,
+                    "tamanho": stat.st_size,
+                    "data_criacao": datetime.fromtimestamp(stat.st_ctime, ZoneInfo("America/Sao_Paulo")),
+                    "tipo": "Excel" if filename.endswith(".xlsx") else "PDF"
                 })
-
-    # Ordenar por data (mais recente primeiro)
-    relatorios.sort(key=lambda x: x['data_criacao'], reverse=True)
+    relatorios.sort(key=lambda x: x["data_criacao"], reverse=True)
     return relatorios
+
+# -----------------------
+# Exemplo rápido (apenas para dev/teste)
+# -----------------------
+if __name__ == "__main__":
+    # Quando rodar diretamente, gera PDFs de exemplo na pasta de relatórios
+    exemplo_produtos = [
+        {"id": 1, "nome": "Shampoo A", "categoria_nome": "Cabelos", "preco": 29.9, "estoque": 10, "destaque": True},
+        {"id": 2, "nome": "Condicionador B com nome longo", "categoria_nome": "Cabelos", "preco": 24.5, "estoque": 5, "destaque": False},
+    ]
+    gerar_pdf_produtos(exemplo_produtos, salvar_arquivo=True)
+    print("PDF de produtos gerado em:", RELATORIOS_DIR)

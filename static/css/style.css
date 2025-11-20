@@ -1792,3 +1792,152 @@ display: flex !important
         height: 500px;
     }
 }
+/* ============================================
+   PALETA PREMIUM
+   (altere se quiser outras cores futuramente)
+=============================================== */
+:root {
+    --vivants-primary: #fcd000;
+    --vivants-secondary: #eb9f00;
+    --glass-bg: rgba(255, 255, 255, 0.35);
+    --glass-border: rgba(255, 255, 255, 0.25);
+    --shadow-1: 0 4px 25px rgba(0, 0, 0, 0.08);
+    --shadow-2: 0 10px 40px rgba(0, 0, 0, 0.10);
+    --neu-light: rgba(255, 255, 255, 0.6);
+    --neu-dark: rgba(0, 0, 0, 0.1);
+    --radius: 18px;
+    --blur: 18px;
+}
+
+
+/* ============================================
+   CARDS – Glassmorphism + Neo-Soft Shadow
+=============================================== */
+.card {
+    border-radius: var(--radius);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--blur));
+    box-shadow: var(--shadow-2);
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 45px rgba(0, 0, 0, 0.18);
+}
+
+
+/* ============================================
+   TYPOGRAFIA PREMIUM
+=============================================== */
+h2, h5 {
+    font-weight: 700;
+    letter-spacing: 0.4px;
+}
+
+p, span, strong {
+    font-weight: 500;
+}
+
+
+/* ============================================
+   BOTÕES – Gradiente + Neo-Press Effect
+=============================================== */
+.btn-vivants {
+    background: linear-gradient(135deg, var(--vivants-primary), var(--vivants-secondary));
+    border: none;
+    padding: 12px 18px;
+    font-weight: 600;
+    border-radius: var(--radius);
+    box-shadow:
+        4px 4px 12px var(--neu-dark),
+        -4px -4px 12px var(--neu-light);
+    transition: 0.25s ease;
+}
+
+.btn-vivants:hover {
+    transform: scale(1.03);
+    box-shadow:
+        6px 6px 16px var(--neu-dark),
+        -6px -6px 16px var(--neu-light);
+}
+
+.btn-vivants:active {
+    transform: scale(0.97);
+}
+
+
+/* ============================================
+   ÍCONE – Carrinho vazio
+=============================================== */
+.bi-cart-x {
+    opacity: 0.5;
+    filter: drop-shadow(0 5px 10px rgba(0,0,0,0.15));
+}
+
+
+/* ============================================
+   RESUMO DO PEDIDO
+=============================================== */
+.card-body .h5 {
+    font-weight: 700;
+    color: var(--vivants-secondary);
+}
+
+.text-success {
+    font-weight: 600;
+}
+
+
+/* ============================================
+   TEXTAREA – Glass + Border Glow
+=============================================== */
+textarea.form-control {
+    border-radius: 14px;
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.35);
+    transition: border-color .2s, box-shadow .2s;
+}
+
+textarea.form-control:focus {
+    border-color: var(--vivants-primary);
+    box-shadow: 0 0 0 2px rgba(252, 208, 0, 0.35);
+}
+
+
+/* ============================================
+   RESPONSIVIDADE – Premium Mobile Layout
+=============================================== */
+
+@media (max-width: 992px) {
+    .text-end { text-align: left !important; }
+    .card { margin-bottom: 18px; }
+}
+
+@media (max-width: 768px) {
+
+    h2 { text-align: center; font-size: 1.7rem; }
+
+    .row.align-items-center {
+        text-align: center;
+    }
+
+    .col-md-3,
+    .col-md-6 {
+        width: 100%;
+        margin-bottom: 12px;
+    }
+
+    .text-end { text-align: center !important; }
+}
+
+@media (max-width: 480px) {
+    .btn-vivants {
+        font-size: 0.95rem;
+        padding: 10px 12px;
+    }
+
+    textarea { font-size: 0.9rem; }
+}
