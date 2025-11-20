@@ -1426,7 +1426,7 @@ textarea:focus {
 /* Responsividade */
 @media (max-width: 968px) {
    .menu_mobile{
-    visibility:visible;
+    visibility:hidden;
    }
     .menu{
 
